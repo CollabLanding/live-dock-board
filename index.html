@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Live Trailer Board</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg:#eef2f7; --panel:#fff; --border:#d7dee8; --text:#0f172a; --muted:#64748b;
+      --accent:#2563eb; --accent-dark:#1d4ed8;
+      --open:#64748b; --empty:#0284c7; --loading:#d97706; --loaded:#7c3aed;
+      --ready:#059669; --finished:#0f766e; --custom:#7c3aed; --hold:#be123c; --oos:#991b1b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    button,input,select{font:inherit} button{cursor:pointer} .hidden{display:none!important}
+    .auth-shell{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#0f172a,#1e293b)}
+    .auth-card{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+    .brand-mark{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:900}
+    .auth-card h1{margin:10px 0 5px}.auth-card p{margin:0 0 22px;color:var(--muted)}
+    .stack{display:grid;gap:14px}label{display:grid;gap:6px;font-size:14px;font-weight:700}
+    .remember-row{display:flex;align-items:flex-start;gap:10px;font-size:14px;font-weight:700;cursor:pointer}.remember-row input{width:18px;height:18px;min-height:18px;margin:1px 0 0;flex:0 0 auto}.remember-copy{display:grid;gap:2px}.remember-copy small{font-size:11px;line-height:1.35;color:var(--muted);font-weight:500}
+    input,select{width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#fff;color:var(--text)}
+    input:focus,select:focus,button:focus-visible{outline:3px solid rgba(37,99,235,.2);outline-offset:2px}
+    .primary,.secondary,.danger{min-height:44px;border-radius:10px;padding:10px 14px;font-weight:800}
+    .primary{border:1px solid var(--accent);background:var(--accent);color:#fff}.primary:hover{background:var(--accent-dark)}
+    .secondary{border:1px solid var(--border);background:#fff;color:var(--text)}
+    .danger{border:1px solid #fecaca;background:#fff1f2;color:#be123c}.small{min-height:36px;padding:7px 10px;font-size:13px}
+    .message{min-height:20px;color:var(--muted);font-size:13px}.message.error{color:#b91c1c}.message.success{color:#047857}
+
+    #boardScreen{max-width:1600px;margin:0 auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+    .topbar h1{margin:0;font-size:clamp(24px,3vw,34px)}.topbar p{margin:3px 0 0;color:var(--muted)}
+    .topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.user-email{font-size:13px;color:var(--muted)}
+    .sound-controls{display:flex;align-items:center;gap:7px}.sound-toggle{white-space:nowrap}.sound-volume{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--muted)}.sound-volume select{width:auto;min-width:72px;min-height:36px;padding:6px 8px;border-radius:9px}
+    .connection-badge{font-size:12px;font-weight:800;border:1px solid var(--border);padding:6px 9px;border-radius:999px;background:#fff}
+    .connection-badge.live{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.connection-badge.offline{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+    .summary-grid{display:grid;grid-template-columns:repeat(10,minmax(105px,1fr));gap:10px;margin-bottom:16px}
+    .summary-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px}.summary-card .label{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:center}.summary-card .value{font-size:27px;font-weight:900;margin-top:4px}.summary-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+    .section-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.section-heading h2{margin:0;font-size:20px}.section-heading p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .dock-scroll{overflow-x:auto;padding-bottom:6px}.dock-row{display:grid;gap:6px}.dock-row.thirty{grid-template-columns:repeat(30,minmax(62px,1fr));min-width:2010px}.dock-row.twenty-four{grid-template-columns:repeat(24,minmax(62px,1fr));min-width:1608px}
+    .dock-button{position:relative;border:0;border-radius:11px;min-height:86px;padding:8px 4px;color:#fff;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+    .dock-button.move-aging{transition:background-color 1s linear,color 1s linear}.dock-button:hover{filter:brightness(.96)}.dock-number{font-size:21px;font-weight:950;line-height:1}.dock-status{margin-top:7px;font-size:9px;font-weight:900;letter-spacing:.04em;line-height:1.15;overflow-wrap:anywhere}.dock-status.custom-label{font-size:10px;letter-spacing:0;text-transform:none;padding:0 2px}.dock-move{margin:7px 3px 0;padding:3px 4px;border-radius:6px;background:rgba(15,23,42,.28);font-size:9px;font-weight:900;line-height:1.25}
+    .dock-activity-flag{position:absolute;top:6px;right:6px;width:15px;height:15px;border-radius:3px;border:2px solid rgba(255,255,255,.88);box-shadow:0 1px 4px rgba(15,23,42,.3)}.flag-ontheway{background:#facc15}.flag-done{background:#22c55e}.flag-clarification{background:#ef4444}
+    .status-open{background:var(--open)}.status-empty{background:var(--empty)}.status-loading{background:var(--loading)}.status-loaded{background:var(--loaded)}.status-ready{background:var(--ready)}.status-finished{background:var(--finished)}.status-custom{background:var(--custom)}.status-hold{background:var(--hold)}.status-oos{background:var(--oos)}
+    .yard-label{display:flex;align-items:center;gap:14px;margin:8px 4px 16px;color:var(--muted);font-size:13px}.yard-label span{flex:1;height:1px;background:var(--border)}
+    .building-body{min-height:150px;margin:14px 0;border:1px dashed #cbd5e1;border-radius:14px;display:grid;place-items:center;color:var(--muted);font-weight:900;letter-spacing:.04em;background:#f8fafc}
+    .legend{display:flex;flex-wrap:wrap;gap:14px 20px;font-size:13px}.legend span{display:inline-flex;gap:7px;align-items:center}.swatch{width:11px;height:11px;border-radius:3px}
+    .activity-list{display:grid;gap:8px;max-height:520px;overflow:auto}.activity-item{border:1px solid var(--border);border-radius:11px;padding:11px;background:#fff}.activity-item.actionable{cursor:pointer}.activity-item.actionable:hover{border-color:#94a3b8;background:#f8fafc}.activity-item .time{margin-top:4px;font-size:12px;color:var(--muted)}.activity-empty{padding:26px;text-align:center;color:var(--muted)}
+    .activity-topline{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.activity-copy{min-width:0}.activity-response{flex:0 0 auto;display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;letter-spacing:.02em;border:1px solid transparent}.response-ontheway{background:#fef9c3;color:#854d0e;border-color:#fde047}.response-done{background:#dcfce7;color:#166534;border-color:#86efac}.response-clarification{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.activity-hint{margin-top:6px;font-size:11px;font-weight:700;color:var(--accent)}.activity-controls{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}.activity-response-btn{min-height:38px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:7px 10px;font-size:12px;font-weight:850}.activity-response-btn:hover{border-color:#94a3b8}.activity-response-btn.active.ontheway{background:#fef9c3;border-color:#eab308;color:#713f12}.activity-response-btn.active.done{background:#dcfce7;border-color:#22c55e;color:#14532d}.activity-response-btn.active.clarification{background:#fee2e2;border-color:#ef4444;color:#7f1d1d}
+
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:18px;z-index:50}
+    .action-modal{width:min(650px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.34)}
+    .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+    .modal-head h2{margin:0;font-size:24px}.modal-head p{margin:4px 0 0;color:var(--muted)}.close-btn{border:1px solid var(--border);background:#fff;border-radius:9px;width:42px;height:42px;font-size:22px}
+    .modal-body{padding:18px 20px 22px}.action-choice{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}.action-choice>button{width:100%;border:0;background:#f8fafc;text-align:left;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;font-weight:900;color:var(--text)}
+    .action-choice>button .hint{font-size:12px;color:var(--muted);font-weight:600}.action-panel{padding:15px 16px;border-top:1px solid var(--border)}
+    .status-select-row{display:grid;gap:10px;align-items:end}
+    .building-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px}.building-btn{min-height:62px;border:1px solid var(--border);border-radius:12px;background:#fff;font-weight:900}.building-btn.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.14);color:var(--accent)}.building-btn.general-selected{background:#eff6ff;border-color:var(--accent);color:var(--accent)}
+    .move-help{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.45}.move-current,.move-pending{margin:0 0 12px;padding:11px 12px;border-radius:10px;font-size:13px;font-weight:700}.move-current{background:#eff6ff;color:#1e3a8a}.move-pending{background:#f0fdf4;color:#166534}
+    .dock-picker-title{margin:15px 0 8px;font-size:13px;color:var(--muted);font-weight:800}.dock-picker{display:grid;grid-template-columns:repeat(10,minmax(42px,1fr));gap:7px}.dock-dest{min-height:44px;border:1px solid var(--border);border-radius:9px;background:#fff;font-weight:900}.dock-dest:hover{border-color:var(--accent);color:var(--accent)}.dock-dest.selected{background:#eff6ff;border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}.dock-dest.source{opacity:.45;cursor:not-allowed;text-decoration:line-through}.dock-dest.occupied{background:#f8fafc;color:#94a3b8}.dock-dest.selected.occupied{background:#eff6ff;color:var(--accent)}
+    .modal-footer{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.modal-footer .primary{width:100%;min-height:50px;font-size:16px}.modal-message{margin-top:12px;min-height:20px;font-size:13px;color:var(--muted)}
+
+    @media(max-width:1150px){.summary-grid{grid-template-columns:repeat(4,minmax(105px,1fr))}}
+    @media(max-width:720px){#boardScreen{padding:10px}.topbar{align-items:flex-start;flex-direction:column}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{border-radius:12px;padding:13px}.dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}.building-picker{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <section id="loginScreen" class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark">TB</div>
+      <h1>Live Trailer Board</h1>
+      <p>Sign in to view trailer status and movement instructions.</p>
+      <form id="loginForm" class="stack">
+        <label>Email<input id="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+        <label class="remember-row"><input id="staySignedIn" type="checkbox"><span class="remember-copy"><span>Stay signed in on this device</span><small>Keeps you signed in until you sign out or your account access is revoked.</small></span></label>
+        <button class="primary" type="submit">Sign in</button>
+        <div id="loginMessage" class="message" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <main id="boardScreen" class="hidden">
+    <header class="topbar">
+      <div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions</p></div>
+      <div class="topbar-actions"><span id="connectionBadge" class="connection-badge">Connecting…</span><div class="sound-controls"><button id="soundToggle" class="secondary small sound-toggle" type="button" aria-pressed="true">🔊 Sound On</button><label class="sound-volume">Volume<select id="soundVolume" aria-label="Sound volume"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label></div><span id="userEmail" class="user-email"></span><button id="signOutBtn" class="secondary small">Sign out</button></div>
+    </header>
+
+    <section id="summaryCards" class="summary-grid"></section>
+
+    <section class="panel">
+      <div class="section-heading"><div><h2>Building 100</h2><p>Docks 30 → 1</p></div></div>
+      <div class="dock-scroll"><div id="b100" class="dock-row thirty"></div></div>
+    </section>
+
+    <div class="yard-label"><span></span><strong>PARKING / TRAILER YARD</strong><span></span></div>
+
+    <section class="panel">
+      <div class="section-heading"><div><h2>Building 200</h2><p>Parking-lot side · docks 31 → 54</p></div></div>
+      <div class="dock-scroll"><div id="b200Parking" class="dock-row twenty-four"></div></div>
+      <div class="building-body">BUILDING 200</div>
+      <div class="section-heading"><div><p>Opposite side · docks 1 → 30</p></div></div>
+      <div class="dock-scroll"><div id="b200Opposite" class="dock-row thirty"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><h2>Recent Activity</h2><p>Click a move assignment to mark it On My Way, Done, or Need Clarification</p></div></div>
+      <div id="historyList" class="activity-list"></div>
+    </section>
+
+    <section class="panel legend">
+      <span><i class="swatch" style="background:var(--open)"></i>Open</span>
+      <span><i class="swatch" style="background:var(--empty)"></i>Empty</span>
+      <span><i class="swatch" style="background:var(--loading)"></i>Loading</span>
+      <span><i class="swatch" style="background:var(--loaded)"></i>Loaded</span>
+      <span><i class="swatch" style="background:var(--ready)"></i>Ready</span>
+      <span><i class="swatch" style="background:var(--finished)"></i>Finished Product</span>
+      <span><i class="swatch" style="background:var(--custom)"></i>Custom</span>
+      <span><i class="swatch" style="background:var(--hold)"></i>Closed</span>
+      <span><i class="swatch" style="background:var(--oos)"></i>Out of Service</span>
+      <span style="margin-left:auto"><i class="swatch" style="background:#facc15"></i>On My Way</span>
+      <span><i class="swatch" style="background:#22c55e"></i>Done (5 min)</span>
+      <span><i class="swatch" style="background:#ef4444"></i>Need Clarification</span>
+    </section>
+  </main>
+</div>
+
+<div id="actionBackdrop" class="modal-backdrop hidden" role="presentation">
+  <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
+    <header class="modal-head">
+      <div><h2 id="actionTitle">Dock</h2><p id="actionSubtitle"></p></div>
+      <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="modal-body">
+      <div class="action-choice">
+        <button id="statusToggle" type="button"><span>Update Status / Actualizar estado</span><span class="hint">Change trailer status / Cambiar estado del remolque ▾</span></button>
+        <div id="statusPanel" class="action-panel hidden">
+          <div class="status-select-row">
+            <label>Status / Estado
+              <select id="statusSelect">
+                <option value="Open Dock">Open / Abierto</option>
+                <option value="Empty Trailer">Empty / Vacío</option>
+                <option value="Loading">Loading / Cargando</option>
+                <option value="Loaded">Loaded / Cargado</option>
+                <option value="Ready">Ready / Listo</option>
+                <option value="Finished Product">Finished Product / Producto terminado</option>
+                <option value="Custom">Custom / Personalizado</option>
+                <option value="Closed">Closed / Cerrado</option>
+                <option value="Out of Service">Out of Service / Fuera de servicio</option>
+              </select>
+            </label>
+            <label id="customStatusWrap" class="hidden">Custom text / Texto personalizado
+              <input id="customStatusText" type="text" maxlength="28" placeholder="Text for dock square / Texto para el cuadro" autocomplete="off">
+              <small style="display:block;margin-top:5px;color:var(--muted);font-size:11px">Maximum 28 characters / Máximo 28 caracteres</small>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-choice">
+        <button id="moveToggle" type="button"><span>Move / Mover</span><span class="hint">Assign a destination / Asignar un destino ▾</span></button>
+        <div id="movePanel" class="action-panel hidden">
+          <div id="currentMove" class="move-current hidden"></div>
+          <div id="pendingMove" class="move-pending hidden"></div>
+          <p class="move-help">Click a building once to choose a specific dock / Haga clic una vez en un edificio para elegir una puerta específica. Click the same building a second time for a general move / Haga clic una segunda vez en el mismo edificio para un movimiento general.</p>
+          <div class="building-picker">
+            <button id="pick100" class="building-btn" type="button">Building 100 / Edificio 100</button>
+            <button id="pick200" class="building-btn" type="button">Building 200 / Edificio 200</button>
+          </div>
+          <div id="dockPickerWrap" class="hidden">
+            <div id="dockPickerTitle" class="dock-picker-title"></div>
+            <div id="dockPicker" class="dock-picker"></div>
+          </div>
+          <button id="clearMove" type="button" class="danger small hidden" style="margin-top:12px">Clear move instruction / Borrar instrucción de movimiento</button>
+        </div>
+      </div>
+      <div class="modal-footer"><button id="applyUpdate" class="primary" type="button">Update / Actualizar</button></div>
+      <div id="modalMessage" class="modal-message" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async()=>{
+  try{
+    const {createClient}=window.supabase;
+    const config={
+      supabaseUrl:"https://wcbmyrtpmrwstbmkeqjt.supabase.co",
+      supabaseAnonKey:"sb_publishable_9N-bP0PF2xxO2XNFKy-rhQ_5e8cT3tN"
+    };
+    const supabase=createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
+    const REMEMBER_KEY="live-trailer-board-remembered-session-v1";
+    const SESSION_KEY="live-trailer-board-tab-session-v1";
+
+    const $=id=>document.getElementById(id);
+    const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume");
+    const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
+
+    const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],doneExpiryTimer=null,moveFadeTimer=null;
+    const warnedMoveKeys=new Set(),pendingLocalActivitySounds=new Set();
+    const SOUND_ENABLED_KEY="live-trailer-board-sound-enabled-v1",SOUND_VOLUME_KEY="live-trailer-board-sound-volume-v1";
+    let audioContext=null,soundEnabled=true,soundLevel=.5;
+    const STATUS_META={
+      "Open Dock":{cls:"status-open",short:"OPEN",color:"var(--open)"},
+      "Empty Trailer":{cls:"status-empty",short:"EMPTY",color:"var(--empty)"},
+      "Loading":{cls:"status-loading",short:"LOADING",color:"var(--loading)"},
+      "Loaded":{cls:"status-loaded",short:"LOADED",color:"var(--loaded)"},
+      "Ready":{cls:"status-ready",short:"READY",color:"var(--ready)"},
+      "Finished Product":{cls:"status-finished",short:"FINISHED",color:"var(--finished)"},
+      "Custom":{cls:"status-custom",short:"CUSTOM",color:"var(--custom)"},
+      "Closed":{cls:"status-hold",short:"CLOSED",color:"var(--hold)"},
+      "Out of Service":{cls:"status-oos",short:"OOS",color:"var(--oos)"}
+    };
+    const legacyStatus={"Loaded / Ready":"Loaded","Hold":"Closed"};
+    const ACTIVITY_META={
+      "On My Way":{badge:"response-ontheway",flag:"flag-ontheway"},
+      "Done":{badge:"response-done",flag:"flag-done"},
+      "Need Clarification":{badge:"response-clarification",flag:"flag-clarification"}
+    };
+    const safe=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    const normalizedStatus=s=>legacyStatus[s]||s||"Open Dock";
+    const STATUS_BILINGUAL={
+      "Open Dock":"OPEN / ABIERTO",
+      "Empty Trailer":"EMPTY / VACÍO",
+      "Loading":"LOADING / CARGANDO",
+      "Loaded":"LOADED / CARGADO",
+      "Ready":"READY / LISTO",
+      "Finished Product":"FINISHED PRODUCT / PRODUCTO TERMINADO",
+      "Custom":"CUSTOM / PERSONALIZADO",
+      "Closed":"CLOSED / CERRADO",
+      "Out of Service":"OOS / FUERA DE SERVICIO"
+    };
+    const sideBilingual=side=>side==="Parking Lot"?"Parking Lot Side / Lado del estacionamiento":side==="Opposite Side"?"Opposite Side / Lado opuesto":`${side} / ${side}`;
+    const setConnection=(text,mode="")=>{connectionBadge.textContent=text;connectionBadge.className="connection-badge"+(mode?` ${mode}`:"")};
+    const showLogin=()=>{loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
+    const showBoard=()=>{loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
+
+    function loadSoundPreferences(){
+      try{
+        const enabled=localStorage.getItem(SOUND_ENABLED_KEY);
+        if(enabled!==null)soundEnabled=enabled!=="false";
+        const stored=Number(localStorage.getItem(SOUND_VOLUME_KEY));
+        if(Number.isFinite(stored)&&stored>=.25&&stored<=1)soundLevel=stored;
+      }catch(_err){}
+      renderSoundControls();
+    }
+    function renderSoundControls(){
+      if(!soundToggle||!soundVolume)return;
+      const supported=Boolean(window.AudioContext||window.webkitAudioContext);
+      soundToggle.disabled=!supported;
+      soundVolume.disabled=!supported;
+      soundToggle.setAttribute("aria-pressed",String(soundEnabled&&supported));
+      soundToggle.textContent=!supported?"Sound unavailable":soundEnabled?"🔊 Sound On":"🔇 Sound Off";
+      soundVolume.value=String(soundLevel);
+    }
+    function saveSoundPreferences(){
+      try{
+        localStorage.setItem(SOUND_ENABLED_KEY,String(soundEnabled));
+        localStorage.setItem(SOUND_VOLUME_KEY,String(soundLevel));
+      }catch(_err){}
+    }
+    function unlockAudio(){
+      if(!soundEnabled)return null;
+      const AudioCtx=window.AudioContext||window.webkitAudioContext;
+      if(!AudioCtx)return null;
+      try{
+        if(!audioContext)audioContext=new AudioCtx();
+        if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
+        return audioContext;
+      }catch(_err){return null}
+    }
+    function scheduleTone(ctx,frequency,startOffset,duration,amp=.7,type="sine"){
+      const start=ctx.currentTime+startOffset;
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type=type;osc.frequency.setValueAtTime(frequency,start);
+      const peak=Math.max(.0001,.095*soundLevel*amp);
+      gain.gain.setValueAtTime(.0001,start);
+      gain.gain.exponentialRampToValueAtTime(peak,start+.012);
+      gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.start(start);osc.stop(start+duration+.025);
+    }
+    function playSound(kind){
+      if(!soundEnabled)return;
+      const ctx=unlockAudio();
+      if(!ctx||ctx.state!=="running")return;
+      if(kind==="move"){
+        scheduleTone(ctx,659.25,0,.11,.6,"sine");
+        scheduleTone(ctx,880,.12,.16,.72,"sine");
+      }else if(kind==="ontheway"){
+        scheduleTone(ctx,523.25,0,.1,.55,"triangle");
+        scheduleTone(ctx,659.25,.105,.13,.62,"triangle");
+      }else if(kind==="done"){
+        scheduleTone(ctx,523.25,0,.1,.5,"sine");
+        scheduleTone(ctx,659.25,.09,.1,.58,"sine");
+        scheduleTone(ctx,783.99,.18,.2,.68,"sine");
+      }else if(kind==="clarification"){
+        scheduleTone(ctx,392,0,.18,.72,"square");
+        scheduleTone(ctx,329.63,.2,.24,.78,"square");
+      }else if(kind==="status"){
+        scheduleTone(ctx,622.25,0,.09,.48,"sine");
+      }else if(kind==="warning"){
+        // Stronger error/buzzer sound for move instructions that hit 10 minutes.
+        scheduleTone(ctx,220,0,.20,1.0,"square");
+        scheduleTone(ctx,174.61,.16,.24,1.0,"square");
+        scheduleTone(ctx,220,.48,.20,1.0,"square");
+        scheduleTone(ctx,174.61,.64,.28,1.0,"square");
+        scheduleTone(ctx,130.81,.96,.34,.95,"sawtooth");
+      }
+    }
+    function activitySoundKind(status){
+      return status==="On My Way"?"ontheway":status==="Done"?"done":status==="Need Clarification"?"clarification":null;
+    }
+
+    function sessionSnapshot(session){return session?{access_token:session.access_token,refresh_token:session.refresh_token}:null}
+    function saveSessionForDevice(session,remember){
+      const snap=sessionSnapshot(session);
+      if(!snap)return;
+      try{
+        if(remember){
+          localStorage.setItem(REMEMBER_KEY,JSON.stringify(snap));
+          sessionStorage.removeItem(SESSION_KEY);
+        }else{
+          sessionStorage.setItem(SESSION_KEY,JSON.stringify(snap));
+          localStorage.removeItem(REMEMBER_KEY);
+        }
+      }catch(_err){}
+    }
+    function clearSavedSessions(){
+      try{localStorage.removeItem(REMEMBER_KEY);sessionStorage.removeItem(SESSION_KEY)}catch(_err){}
+    }
+    function readSavedSession(){
+      try{
+        const remembered=localStorage.getItem(REMEMBER_KEY);
+        if(remembered)return {remember:true,session:JSON.parse(remembered)};
+        const temporary=sessionStorage.getItem(SESSION_KEY);
+        if(temporary)return {remember:false,session:JSON.parse(temporary)};
+      }catch(_err){clearSavedSessions()}
+      return null;
+    }
+
+    async function loadDocks(){
+      const {data,error}=await supabase.from("docks").select("*").order("building").order("side").order("dock_number");
+      if(error)throw error; docks.clear(); (data||[]).forEach(d=>{d.status=normalizedStatus(d.status);docks.set(d.id,d)}); renderEverything();
+    }
+    async function loadHistory(){
+      let {data,error}=await supabase.from("dock_history").select("*").order("activity_last_at",{ascending:false}).limit(35);
+      // Backward-compatible fallback if the v2.3 migration has not been run yet.
+      if(error && String(error.message||"").includes("activity_last_at")){
+        ({data,error}=await supabase.from("dock_history").select("*").order("changed_at",{ascending:false}).limit(35));
+      }
+      if(error)throw error;
+      for(const h of (data||[]))activityStatusCache.set(h.id,h.activity_status||null);
+      renderHistory(data||[]);
+    }
+    async function loadActivityIndicators(){
+      const {data,error}=await supabase.from("dock_history")
+        .select("id,dock_id,activity_status,activity_status_changed_at")
+        .not("activity_status","is",null)
+        .order("activity_status_changed_at",{ascending:false})
+        .limit(1000);
+      if(error)throw error;
+      activityIndicatorRows=data||[];
+      rebuildActivityIndicators();
+      renderEverything();
+    }
+    function rebuildActivityIndicators(){
+      activityIndicators.clear();
+      const now=Date.now(),seenDocks=new Set();
+      for(const row of activityIndicatorRows){
+        if(seenDocks.has(row.dock_id))continue;
+        seenDocks.add(row.dock_id);
+        const st=row.activity_status,meta=ACTIVITY_META[st];
+        if(!meta)continue;
+        const changed=Date.parse(row.activity_status_changed_at||0);
+        if(st==="Done"&&(!changed||now-changed>=300000))continue;
+        activityIndicators.set(row.dock_id,{status:st,changedAt:changed,flag:meta.flag});
+      }
+      scheduleDoneExpiry();
+    }
+    function scheduleDoneExpiry(){
+      if(doneExpiryTimer){clearTimeout(doneExpiryTimer);doneExpiryTimer=null}
+      const now=Date.now();
+      const expiries=[...activityIndicators.values()].filter(x=>x.status==="Done"&&x.changedAt).map(x=>x.changedAt+300000).filter(t=>t>now);
+      if(!expiries.length)return;
+      const delay=Math.max(250,Math.min(...expiries)-now+100);
+      doneExpiryTimer=setTimeout(()=>{rebuildActivityIndicators();renderEverything()},delay);
+    }
+    function rowDocks(building,side,asc=true){return [...docks.values()].filter(d=>d.building===building&&d.side===side).sort((a,b)=>asc?a.dock_number-b.dock_number:b.dock_number-a.dock_number)}
+    const MOVE_FADE_MS=10*60*1000;
+    function mixRgb(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
+    function moveAgeStyle(d){
+      if(!(d.move_to_building&&d.move_instruction_at))return null;
+      const started=Date.parse(d.move_instruction_at);
+      if(!Number.isFinite(started))return null;
+      const progress=Math.min(1,Math.max(0,(Date.now()-started)/MOVE_FADE_MS));
+      const green=[34,197,94],yellow=[250,204,21],red=[239,68,68];
+      const rgb=progress<=.5?mixRgb(green,yellow,progress*2):mixRgb(yellow,red,(progress-.5)*2);
+      const darkText=progress>.22&&progress<.72;
+      return {background:`rgb(${rgb.join(",")})`,color:darkText?"#172033":"#fff",minutes:Math.max(0,(Date.now()-started)/60000)};
+    }
+    function moveWarningKey(d){return d?.move_to_building&&d?.move_instruction_at?`${d.id}|${d.move_instruction_at}`:null}
+    function seedExistingMoveWarnings(){
+      const now=Date.now();
+      for(const d of docks.values()){
+        const started=Date.parse(d.move_instruction_at||0),key=moveWarningKey(d);
+        if(key&&Number.isFinite(started)&&now-started>=MOVE_FADE_MS)warnedMoveKeys.add(key);
+      }
+    }
+    function checkMoveWarnings(){
+      const now=Date.now();
+      for(const d of docks.values()){
+        const started=Date.parse(d.move_instruction_at||0),key=moveWarningKey(d);
+        if(!key||!Number.isFinite(started)||now-started<MOVE_FADE_MS)continue;
+        if(!warnedMoveKeys.has(key)){
+          warnedMoveKeys.add(key);
+          playSound("warning");
+        }
+      }
+    }
+    function startMoveFadeTimer(){
+      if(moveFadeTimer)clearInterval(moveFadeTimer);
+      moveFadeTimer=setInterval(()=>{
+        checkMoveWarnings();
+        if([...docks.values()].some(d=>d.move_to_building&&d.move_instruction_at))renderEverything();
+      },5000);
+    }
+    function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",true));renderSummary()}
+    function moveLabel(d){return d.move_to_building?`MOVE → B${d.move_to_building}${d.move_to_dock_number!=null?` D${d.move_to_dock_number}`:""}`:""}
+    function renderRow(id,items){
+      const c=$(id);c.innerHTML="";items.forEach(d=>{
+        const st=normalizedStatus(d.status),meta=STATUS_META[st]||STATUS_META["Open Dock"],indicator=activityIndicators.get(d.id),b=document.createElement("button");
+        const statusDisplay=st==="Custom"?(String(d.custom_status_text||"CUSTOM").trim()||"CUSTOM"):meta.short;
+        b.type="button";b.className=`dock-button ${meta.cls}`;
+        const moveAge=moveAgeStyle(d);
+        if(moveAge){b.classList.add("move-aging");b.style.background=moveAge.background;b.style.color=moveAge.color}
+        const flag=indicator?`<span class="dock-activity-flag ${indicator.flag}" title="${safe(indicator.status)}" aria-label="${safe(indicator.status)}"></span>`:"";
+        b.innerHTML=`${flag}<div class="dock-number">${d.dock_number}</div><div class="dock-status ${st==="Custom"?"custom-label":""}">${safe(statusDisplay)}</div>${moveLabel(d)?`<div class="dock-move">${safe(moveLabel(d))}</div>`:""}`;
+        b.setAttribute("aria-label",`Building ${d.building}, dock ${d.dock_number}, ${statusDisplay}${moveLabel(d)?", "+moveLabel(d)+(moveAge?`, assigned ${Math.floor(moveAge.minutes)} minutes ago`:""):""}${indicator?", activity "+indicator.status:""}`);
+        b.addEventListener("click",()=>openDock(d.id));c.appendChild(b)
+      })
+    }
+    function renderSummary(){
+      const vals=[...docks.values()],count=s=>vals.filter(d=>normalizedStatus(d.status)===s).length,moves=vals.filter(d=>d.move_to_building).length;
+      const cards=[["Open",count("Open Dock"),"var(--open)"],["Empty",count("Empty Trailer"),"var(--empty)"],["Loading",count("Loading"),"var(--loading)"],["Loaded",count("Loaded"),"var(--loaded)"],["Ready",count("Ready"),"var(--ready)"],["Finished",count("Finished Product"),"var(--finished)"],["Custom",count("Custom"),"var(--custom)"],["Closed",count("Closed"),"var(--hold)"],["OOS",count("Out of Service"),"var(--oos)"],["Moves",moves,"var(--accent)"]];
+      summaryCards.innerHTML=cards.map(([l,v,c])=>`<div class="summary-card"><div class="label"><i class="summary-dot" style="background:${c}"></i>${l}</div><div class="value">${v}</div></div>`).join("")
+    }
+    function formatMove(building,dockNo){
+      if(!building)return "";
+      return dockNo!=null
+        ?`Building / Edificio ${building}, Dock / Puerta ${dockNo}`
+        :`Building / Edificio ${building} (General)`;
+    }
+    function sameMove(aBuilding,aDock,bBuilding,bDock){
+      const ab=aBuilding==null?null:Number(aBuilding),bb=bBuilding==null?null:Number(bBuilding);
+      const ad=aDock==null?null:Number(aDock),bd=bDock==null?null:Number(bDock);
+      return ab===bb&&ad===bd;
+    }
+    function resetMoveButtons(){
+      pick100.classList.remove("active","general-selected");pick200.classList.remove("active","general-selected");
+      pick100.textContent="Building 100 / Edificio 100";pick200.textContent="Building 200 / Edificio 200";
+    }
+    function showPendingMove(text){
+      if(text){pendingMoveEl.textContent=text;pendingMoveEl.classList.remove("hidden")}
+      else{pendingMoveEl.textContent="";pendingMoveEl.classList.add("hidden")}
+    }
+    function refreshCurrentMoveDisplay(d){
+      if(d.move_to_building){
+        currentMove.textContent=`Current instruction / Instrucción actual: Move to / Mover a ${formatMove(d.move_to_building,d.move_to_dock_number)}`;
+        currentMove.classList.remove("hidden");clearMove.classList.remove("hidden");
+      }else{
+        currentMove.classList.add("hidden");clearMove.classList.add("hidden");
+      }
+    }
+    function openDock(id){
+      selectedDockId=id;selectedMoveBuilding=null;const d=docks.get(id);
+      initialStatus=normalizedStatus(d.status);
+      initialCustomStatusText=String(d.custom_status_text||"");
+      pendingMove={building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),changed:false,clear:false};
+      actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${d.dock_number}`;
+      actionSubtitle.textContent=`${sideBilingual(d.side)} · ${initialStatus==="Custom"?(initialCustomStatusText||STATUS_BILINGUAL[initialStatus]):(STATUS_BILINGUAL[initialStatus]||initialStatus)}`;
+      statusSelect.value=initialStatus;
+      customStatusText.value=initialStatus==="Custom"?initialCustomStatusText:"";
+      customStatusWrap.classList.toggle("hidden",initialStatus!=="Custom");
+      statusPanel.classList.add("hidden");movePanel.classList.add("hidden");dockPickerWrap.classList.add("hidden");
+      resetMoveButtons();showPendingMove("");modalMessage.textContent="";modalMessage.style.color="";
+      refreshCurrentMoveDisplay(d);
+      actionBackdrop.classList.remove("hidden")
+    }
+    function closeModal(){actionBackdrop.classList.add("hidden");selectedDockId=null;selectedMoveBuilding=null;pendingMove=null;initialStatus=null;initialCustomStatusText="";customStatusText.value="";customStatusWrap.classList.add("hidden")}
+    function togglePanel(which){
+      if(which==="status")statusPanel.classList.toggle("hidden");
+      else movePanel.classList.toggle("hidden")
+    }
+    async function updateSelected(payload,success){
+      if(!selectedDockId)return null;
+      modalMessage.textContent="Saving… / Guardando…";modalMessage.style.color="";
+      const full={...payload,updated_by:currentUser.id,updated_by_email:currentUser.email};
+      const {data,error}=await supabase.from("docks").update(full).eq("id",selectedDockId).select("*").single();
+      if(error){modalMessage.textContent=error.message;modalMessage.style.color="#b91c1c";return null}
+      if(data){
+        data.status=normalizedStatus(data.status);docks.set(data.id,data);renderEverything();
+        if(selectedDockId===data.id){
+          const savedCustom=String(data.custom_status_text||"");
+          actionSubtitle.textContent=`${sideBilingual(data.side)} · ${data.status==="Custom"?(savedCustom||STATUS_BILINGUAL[data.status]):(STATUS_BILINGUAL[data.status]||data.status)}`;
+          statusSelect.value=data.status;initialStatus=data.status;initialCustomStatusText=savedCustom;
+          customStatusText.value=data.status==="Custom"?savedCustom:"";
+          customStatusWrap.classList.toggle("hidden",data.status!=="Custom");
+          pendingMove={building:data.move_to_building==null?null:Number(data.move_to_building),dock:data.move_to_dock_number==null?null:Number(data.move_to_dock_number),changed:false,clear:false};
+          selectedMoveBuilding=null;dockPickerWrap.classList.add("hidden");resetMoveButtons();showPendingMove("");
+          refreshCurrentMoveDisplay(data)
+        }
+      }
+      modalMessage.style.color="#047857";modalMessage.textContent=success;return data
+    }
+    function renderDestinationDocks(building){
+      // First click: show that building's dock doors.
+      // Second click on the SAME building: choose a general building move.
+      // Clicking it again after General toggles the dock-door list back open.
+      const btn=building===100?pick100:pick200;
+      const isSameBuilding=selectedMoveBuilding===building;
+      const isGeneral=btn.classList.contains("general-selected");
+
+      if(isSameBuilding&&!isGeneral){
+        resetMoveButtons();
+        selectedMoveBuilding=building;
+        pendingMove={building,dock:null,changed:true,clear:false};
+        dockPickerWrap.classList.add("hidden");
+        btn.classList.add("active","general-selected");
+        btn.textContent=`Building / Edificio ${building} ✓ General`;
+        showPendingMove(`Pending move / Movimiento pendiente: ${formatMove(building,null)}. Press Update / Presione Actualizar to save / para guardar.`);
+        modalMessage.textContent="";
+        return;
+      }
+
+      resetMoveButtons();
+      selectedMoveBuilding=building;
+      btn.classList.add("active");
+      btn.textContent=`Building / Edificio ${building} · Click again for General / Haga clic otra vez para General`;
+      dockPickerWrap.classList.remove("hidden");
+      dockPickerTitle.textContent=`Choose a dock / Elija una puerta at Building / en Edificio ${building}`;
+      dockPicker.innerHTML="";
+      const source=docks.get(selectedDockId);
+      const nums=building===100?Array.from({length:30},(_,i)=>i+1):Array.from({length:54},(_,i)=>i+1);
+      nums.forEach(n=>{
+        const dest=[...docks.values()].find(d=>d.building===building&&d.dock_number===n);if(!dest)return;
+        const b=document.createElement("button");b.type="button";b.className="dock-dest";b.textContent=n;
+        const isSource=source&&dest.id===source.id;const occupied=normalizedStatus(dest.status)!=="Open Dock";
+        if(isSource){b.classList.add("source");b.disabled=true;b.title="This is the current dock / Esta es la puerta actual"}
+        else if(occupied){b.classList.add("occupied");b.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`}
+        if(pendingMove&&pendingMove.building===building&&pendingMove.dock===n&&!pendingMove.clear)b.classList.add("selected");
+        b.addEventListener("click",()=>{
+          pendingMove={building,dock:n,changed:true,clear:false};
+          [...dockPicker.querySelectorAll(".dock-dest")].forEach(x=>x.classList.remove("selected"));
+          b.classList.add("selected");
+          showPendingMove(`Pending move / Movimiento pendiente: ${formatMove(building,n)}. Press Update / Presione Actualizar to save / para guardar.`);
+          modalMessage.textContent="";
+        });
+        dockPicker.appendChild(b)
+      })
+    }
+    function markClearMove(){
+      pendingMove={building:null,dock:null,changed:true,clear:true};selectedMoveBuilding=null;dockPickerWrap.classList.add("hidden");resetMoveButtons();
+      showPendingMove("Pending change / Cambio pendiente: clear the current move instruction / borrar la instrucción de movimiento. Press Update / Presione Actualizar to save / para guardar.");modalMessage.textContent="";
+    }
+    async function applyDockUpdate(){
+      if(!selectedDockId)return;
+      const current=docks.get(selectedDockId);if(!current)return;
+      const newStatus=statusSelect.value,payload={};
+      const currentStatus=normalizedStatus(current.status);
+      const statusChanged=newStatus!==currentStatus;
+      const typedCustom=customStatusText.value.trim();
+      const currentCustom=String(current.custom_status_text||"");
+      let customChanged=false;
+
+      if(newStatus==="Custom"){
+        if(!typedCustom){
+          modalMessage.style.color="#b91c1c";
+          modalMessage.textContent="Enter custom text / Ingrese texto personalizado.";
+          customStatusText.focus();
+          return;
+        }
+        customChanged=typedCustom!==currentCustom;
+        if(statusChanged)payload.status=newStatus;
+        if(customChanged||statusChanged)payload.custom_status_text=typedCustom;
+      }else{
+        if(statusChanged)payload.status=newStatus;
+        if(currentCustom){
+          payload.custom_status_text=null;
+          customChanged=true;
+        }
+      }
+
+      if(statusChanged&&newStatus==="Open Dock"){
+        payload.move_to_building=null;payload.move_to_dock_number=null;payload.move_instruction_at=null;
+      }else if(pendingMove?.changed){
+        if(pendingMove.clear||pendingMove.building==null){
+          payload.move_to_building=null;payload.move_to_dock_number=null;payload.move_instruction_at=null;
+        }else{
+          payload.move_to_building=pendingMove.building;
+          payload.move_to_dock_number=pendingMove.dock;
+          if(!sameMove(current.move_to_building,current.move_to_dock_number,pendingMove.building,pendingMove.dock)){
+            payload.move_instruction_at=new Date().toISOString();
+          }
+        }
+      }
+
+      const moveWillChange=("move_to_building" in payload)&&!sameMove(current.move_to_building,current.move_to_dock_number,payload.move_to_building,payload.move_to_dock_number);
+      if(!statusChanged&&!customChanged&&!moveWillChange){
+        modalMessage.style.color="#64748b";modalMessage.textContent="No changes selected / No se seleccionaron cambios.";return;
+      }
+      const saved=await updateSelected(payload,"Update saved / Actualización guardada.");
+      if(saved){
+        if(moveWillChange&&payload.move_to_building)playSound("move");
+        else if(statusChanged||customChanged)playSound("status");
+        closeModal();
+      }
+    }
+
+    function historyMoveLabel(building,dockNo){
+      if(!building)return "";
+      return dockNo!=null?`B${building} D${dockNo}`:`B${building} (General)`;
+    }
+    function isMoveAssignment(h){
+      const oldMove=historyMoveLabel(h.old_move_to_building,h.old_move_to_dock_number);
+      const newMove=historyMoveLabel(h.new_move_to_building,h.new_move_to_dock_number);
+      return Boolean(newMove&&oldMove!==newMove);
+    }
+    function renderHistory(items){
+      if(!items.length){historyList.innerHTML='<div class="activity-empty">No activity yet.</div>';return}
+      historyList.innerHTML=items.map(h=>{
+        const parts=[];const oldS=normalizedStatus(h.old_status),newS=normalizedStatus(h.new_status);
+        const oldCustom=String(h.old_custom_status_text||""),newCustom=String(h.new_custom_status_text||"");
+        const oldStatusLabel=oldS==="Custom"?(oldCustom||"CUSTOM"):(STATUS_META[oldS]?.short||oldS);
+        const newStatusLabel=newS==="Custom"?(newCustom||"CUSTOM"):(STATUS_META[newS]?.short||newS);
+        if(oldS!==newS||oldCustom!==newCustom)parts.push(`Status: ${safe(oldStatusLabel)} → ${safe(newStatusLabel)}`);
+        const oldMove=historyMoveLabel(h.old_move_to_building,h.old_move_to_dock_number);
+        const newMove=historyMoveLabel(h.new_move_to_building,h.new_move_to_dock_number);
+        if(oldMove!==newMove)parts.push(newMove?`Move → ${newMove}`:"Move instruction cleared");
+        if(!parts.length)parts.push("Updated");
+        const actionable=isMoveAssignment(h),meta=ACTIVITY_META[h.activity_status],expanded=expandedActivityId===h.id;
+        const badge=meta?`<span class="activity-response ${meta.badge}">${safe(h.activity_status)}</span>`:"";
+        const controls=actionable?`<div class="activity-controls ${expanded?"":"hidden"}" data-controls-for="${h.id}">
+          <button type="button" class="activity-response-btn ontheway ${h.activity_status==="On My Way"?"active":""}" data-history-id="${h.id}" data-activity-status="On My Way">On My Way</button>
+          <button type="button" class="activity-response-btn done ${h.activity_status==="Done"?"active":""}" data-history-id="${h.id}" data-activity-status="Done">Done</button>
+          <button type="button" class="activity-response-btn clarification ${h.activity_status==="Need Clarification"?"active":""}" data-history-id="${h.id}" data-activity-status="Need Clarification">Need Clarification</button>
+        </div>`:"";
+        const originalWho=h.changed_by_email?safe(h.changed_by_email):"Unknown user";
+        const responseLine=h.activity_status
+          ? `<div class="time"><strong>${safe(h.activity_status)}</strong>: ${new Date(h.activity_status_changed_at||h.activity_last_at||h.changed_at).toLocaleString()} · ${h.activity_status_changed_by_email?safe(h.activity_status_changed_by_email):"Unknown user"}</div>`
+          : "";
+        return `<div class="activity-item ${actionable?"actionable":""}" data-activity-id="${h.id}" ${actionable?'tabindex="0" role="button"':''}>
+          <div class="activity-topline"><div class="activity-copy"><div><strong>Building ${h.building} Dock ${h.dock_number}</strong>: ${parts.join(" · ")}</div><div class="time">Created: ${new Date(h.changed_at).toLocaleString()} · ${originalWho}</div>${responseLine}${actionable&&!expanded?'<div class="activity-hint">Click to update this move</div>':''}</div>${badge}</div>${controls}</div>`
+      }).join("")
+    }
+    async function setActivityStatus(historyId,status){
+      if(!ACTIVITY_META[status])return;
+      const soundKey=`${historyId}|${status}`;
+      pendingLocalActivitySounds.add(soundKey);
+      let activity=null;
+      const {data:activityData,error:activityReadError}=await supabase.from("dock_history")
+        .select("id,dock_id,new_move_to_building,new_move_to_dock_number")
+        .eq("id",historyId).single();
+      if(activityReadError){pendingLocalActivitySounds.delete(soundKey);alert("Could not read move activity: "+activityReadError.message);return}
+      activity=activityData;
+
+      const now=new Date().toISOString();
+      let {error}=await supabase.from("dock_history").update({
+        activity_status:status,
+        activity_status_changed_at:now,
+        activity_status_changed_by:currentUser.id,
+        activity_status_changed_by_email:currentUser.email,
+        activity_last_at:now
+      }).eq("id",historyId);
+      // Backward-compatible fallback if the v2.3 migration has not been run yet.
+      if(error && String(error.message||"").includes("activity_last_at")){
+        ({error}=await supabase.from("dock_history").update({
+          activity_status:status,
+          activity_status_changed_at:now,
+          activity_status_changed_by:currentUser.id,
+          activity_status_changed_by_email:currentUser.email
+        }).eq("id",historyId));
+      }
+      if(error){pendingLocalActivitySounds.delete(soundKey);alert("Could not update activity: "+error.message);return}
+      activityStatusCache.set(historyId,status);
+      pendingLocalActivitySounds.delete(soundKey);
+      const localActivitySound=activitySoundKind(status);if(localActivitySound)playSound(localActivitySound);
+
+      if(status==="Done"&&activity?.dock_id&&activity.new_move_to_building){
+        const current=docks.get(activity.dock_id);
+        const sameCurrentMove=current&&sameMove(
+          current.move_to_building,current.move_to_dock_number,
+          activity.new_move_to_building,activity.new_move_to_dock_number
+        );
+        if(sameCurrentMove){
+          let clearQuery=supabase.from("docks").update({
+            move_to_building:null,
+            move_to_dock_number:null,
+            move_instruction_at:null,
+            updated_by:currentUser.id,
+            updated_by_email:currentUser.email
+          })
+          .eq("id",activity.dock_id)
+          .eq("move_to_building",activity.new_move_to_building);
+          clearQuery=activity.new_move_to_dock_number==null
+            ?clearQuery.is("move_to_dock_number",null)
+            :clearQuery.eq("move_to_dock_number",activity.new_move_to_dock_number);
+          const {data:cleared,error:clearError}=await clearQuery.select("*").maybeSingle();
+          if(clearError){alert("Marked Done, but the move instruction could not be cleared: "+clearError.message)}
+          else if(cleared){cleared.status=normalizedStatus(cleared.status);docks.set(cleared.id,cleared);renderEverything()}
+        }
+        // Put the completed activity back at the top after the automatic clear creates its own history row.
+        const bumpedAt=new Date().toISOString();
+        await supabase.from("dock_history").update({activity_last_at:bumpedAt}).eq("id",historyId);
+      }
+
+      expandedActivityId=historyId;
+      await Promise.all([loadHistory(),loadActivityIndicators()]);
+    }
+    historyList.addEventListener("click",e=>{
+      const statusBtn=e.target.closest("[data-activity-status]");
+      if(statusBtn){e.stopPropagation();setActivityStatus(Number(statusBtn.dataset.historyId),statusBtn.dataset.activityStatus);return}
+      const item=e.target.closest(".activity-item.actionable");
+      if(!item)return;
+      const id=Number(item.dataset.activityId);expandedActivityId=expandedActivityId===id?null:id;loadHistory();
+    });
+    historyList.addEventListener("keydown",e=>{
+      if((e.key==="Enter"||e.key===" ")&&e.target.matches(".activity-item.actionable")){e.preventDefault();const id=Number(e.target.dataset.activityId);expandedActivityId=expandedActivityId===id?null:id;loadHistory()}
+    });
+    function handleDockRealtime(payload){
+      const row=payload.new||payload.old;if(!row)return;
+      const previous=docks.get(row.id);
+      let soundKind=null;
+      if(payload.eventType==="DELETE"){
+        docks.delete(row.id);
+      }else{
+        row.status=normalizedStatus(row.status);
+        if(previous&&payload.eventType==="UPDATE"){
+          const statusChanged=normalizedStatus(previous.status)!==row.status;
+          const moveChanged=!sameMove(previous.move_to_building,previous.move_to_dock_number,row.move_to_building,row.move_to_dock_number);
+          if(moveChanged&&row.move_to_building)soundKind="move";
+          else if(statusChanged)soundKind="status";
+        }
+        docks.set(row.id,row);
+      }
+      if(soundKind)playSound(soundKind);
+      renderEverything();
+      if(selectedDockId===row.id&&payload.eventType!=="DELETE")openDock(row.id);
+    }
+    function handleHistoryRealtime(payload){
+      const row=payload.new||payload.old;
+      if(row&&payload.eventType==="UPDATE"){
+        const next=row.activity_status||null,previous=activityStatusCache.get(row.id)||null;
+        if(next&&next!==previous){
+          const key=`${row.id}|${next}`;
+          activityStatusCache.set(row.id,next);
+          if(pendingLocalActivitySounds.has(key))pendingLocalActivitySounds.delete(key);
+          else{const kind=activitySoundKind(next);if(kind)playSound(kind)}
+        }
+      }else if(row&&payload.eventType==="INSERT"){
+        activityStatusCache.set(row.id,row.activity_status||null);
+      }
+      Promise.all([loadHistory(),loadActivityIndicators()]);
+    }
+    function subscribeRealtime(){
+      if(dockChannel)supabase.removeChannel(dockChannel);if(historyChannel)supabase.removeChannel(historyChannel);
+      dockChannel=supabase.channel("trailer-board-live").on("postgres_changes",{event:"*",schema:"public",table:"docks"},handleDockRealtime).subscribe(status=>{if(status==="SUBSCRIBED")setConnection("Live","live");else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")setConnection("Connection issue","offline")});
+      historyChannel=supabase.channel("trailer-history-live").on("postgres_changes",{event:"*",schema:"public",table:"dock_history"},handleHistoryRealtime).subscribe()
+    }
+    async function init(user){currentUser=user;userEmail.textContent=user.email||"";showBoard();setConnection("Connecting…");try{await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);seedExistingMoveWarnings();subscribeRealtime();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
+
+    loginForm.addEventListener("submit",async e=>{
+      e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
+      const {data,error}=await supabase.auth.signInWithPassword({email:email.value.trim(),password:password.value});
+      if(error){loginMessage.className="message error";loginMessage.textContent=error.message;return}
+      saveSessionForDevice(data.session,staySignedIn.checked);
+      loginMessage.textContent="";await init(data.user);
+    });
+    signOutBtn.addEventListener("click",async()=>{
+      clearSavedSessions();await supabase.auth.signOut();currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];warnedMoveKeys.clear();pendingLocalActivitySounds.clear();
+      if(doneExpiryTimer)clearTimeout(doneExpiryTimer);if(moveFadeTimer)clearInterval(moveFadeTimer);moveFadeTimer=null;showLogin()
+    });
+    soundToggle.addEventListener("click",()=>{
+      soundEnabled=!soundEnabled;saveSoundPreferences();renderSoundControls();
+      if(soundEnabled){unlockAudio();playSound("status")}
+    });
+    soundVolume.addEventListener("change",()=>{
+      const next=Number(soundVolume.value);soundLevel=Number.isFinite(next)?Math.min(1,Math.max(.25,next)):.5;
+      saveSoundPreferences();renderSoundControls();if(soundEnabled){unlockAudio();playSound("status")}
+    });
+    document.addEventListener("pointerdown",unlockAudio,{capture:true});
+    document.addEventListener("keydown",unlockAudio,{capture:true});
+    closeAction.addEventListener("click",closeModal);actionBackdrop.addEventListener("click",e=>{if(e.target===actionBackdrop)closeModal()});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!actionBackdrop.classList.contains("hidden"))closeModal()});
+    statusToggle.addEventListener("click",()=>togglePanel("status"));
+    statusSelect.addEventListener("change",()=>{
+      const isCustom=statusSelect.value==="Custom";
+      customStatusWrap.classList.toggle("hidden",!isCustom);
+      if(isCustom){
+        if(!customStatusText.value&&initialStatus==="Custom")customStatusText.value=initialCustomStatusText;
+        setTimeout(()=>customStatusText.focus(),0);
+      }
+      modalMessage.textContent="";
+    });
+    moveToggle.addEventListener("click",()=>togglePanel("move"));applyUpdate.addEventListener("click",applyDockUpdate);pick100.addEventListener("click",()=>renderDestinationDocks(100));pick200.addEventListener("click",()=>renderDestinationDocks(200));clearMove.addEventListener("click",markClearMove);
+    supabase.auth.onAuthStateChange((event,session)=>{
+      if(event==="TOKEN_REFRESHED"&&session){
+        let remember=false;try{remember=Boolean(localStorage.getItem(REMEMBER_KEY))}catch(_err){}
+        saveSessionForDevice(session,remember);
+      }
+      if(event==="SIGNED_OUT"){clearSavedSessions();showLogin()}
+    });
+    loadSoundPreferences();
+    const saved=readSavedSession();
+    if(saved?.session?.access_token&&saved?.session?.refresh_token){
+      staySignedIn.checked=saved.remember;
+      const {data,error}=await supabase.auth.setSession(saved.session);
+      if(!error&&data.session?.user){saveSessionForDevice(data.session,saved.remember);await init(data.session.user)}
+      else{clearSavedSessions();showLogin()}
+    }else showLogin();
+  }catch(err){console.error(err);const m=document.getElementById("loginMessage");if(m){m.className="message error";m.textContent="Could not start the trailer board: "+(err?.message||err)}}
+})();
+</script>
+</body>
+</html>
