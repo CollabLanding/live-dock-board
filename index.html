@@ -8,6 +8,14 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Live Trailer Board</title>
+  <script>
+    (()=>{try{
+      const saved=localStorage.getItem("live-trailer-board-theme-v1");
+      const theme=saved==="dark"?"dark":"light";
+      document.documentElement.dataset.theme=theme;
+      document.documentElement.style.colorScheme=theme;
+    }catch(_err){document.documentElement.dataset.theme="light"}})();
+  </script>
   <style>
     :root {
       color-scheme: light;
@@ -39,6 +47,7 @@
     .topbar h1{margin:0;font-size:clamp(24px,3vw,34px)}.topbar p{margin:3px 0 0;color:var(--muted)}
     .topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.user-email{font-size:13px;color:var(--muted)}
     .sound-controls{display:flex;align-items:center;gap:7px}.sound-toggle{white-space:nowrap}.sound-volume{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--muted)}.sound-volume select{width:auto;min-width:72px;min-height:36px;padding:6px 8px;border-radius:9px}
+    .theme-control{display:flex;align-items:center;gap:7px;padding:0 2px}.theme-label{min-width:58px;text-align:right;font-size:12px;font-weight:850;color:var(--muted);white-space:nowrap}.theme-switch{position:relative;width:48px;height:26px;min-height:26px;flex:0 0 48px;border:1px solid #cbd5e1;border-radius:999px;padding:0;background:#e2e8f0;transition:background .18s ease,border-color .18s ease}.theme-switch:hover{filter:none}.theme-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(15,23,42,.28);transition:transform .18s ease}.theme-switch[aria-checked="true"]{background:#475569;border-color:#64748b}.theme-switch[aria-checked="true"] .theme-thumb{transform:translateX(22px)}
     .connection-badge{font-size:12px;font-weight:800;border:1px solid var(--border);padding:6px 9px;border-radius:999px;background:#fff}
     .connection-badge.live{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.connection-badge.offline{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
     .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
@@ -70,6 +79,86 @@
     .dock-picker-title{margin:15px 0 8px;font-size:13px;color:var(--muted);font-weight:800}.dock-picker{display:grid;grid-template-columns:repeat(10,minmax(42px,1fr));gap:7px}.dock-dest{min-height:44px;border:1px solid var(--border);border-radius:9px;background:#fff;font-weight:900}.dock-dest:hover{border-color:var(--accent);color:var(--accent)}.dock-dest.selected{background:#eff6ff;border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}.dock-dest.source{opacity:.45;cursor:not-allowed;text-decoration:line-through}.dock-dest.occupied{background:#f8fafc;color:#94a3b8}.dock-dest.selected.occupied{background:#eff6ff;color:var(--accent)}
     .modal-footer{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.modal-footer .primary{width:100%;min-height:50px;font-size:16px}.modal-message{margin-top:12px;min-height:20px;font-size:13px;color:var(--muted)}.batch-selected-list{margin:8px 0 14px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;color:var(--muted);font-size:12px;line-height:1.45}.batch-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}.batch-actions button{min-width:145px}
 
+
+    /* Transfers-style dark theme: softer contrast, dark panels/forms/modals,
+       and subdued but still distinct dock status colors. */
+    html[data-theme="dark"]{
+      color-scheme:dark;
+      --bg:#0f1720;
+      --panel:#17212d;
+      --border:#334155;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#60a5fa;
+      --accent-dark:#3b82f6;
+      --open:#475569;
+      --empty:#0369a1;
+      --loading:#b45309;
+      --loaded:#6d28d9;
+      --ready:#047857;
+      --finished:#0f766e;
+      --threepl:#3730a3;
+      --needempty:#be185d;
+      --custom:#6d28d9;
+      --hold:#9f1239;
+      --oos:#7f1d1d;
+    }
+    html[data-theme="dark"] body,
+    body.dark-theme{background:var(--bg);color:var(--text)}
+    html[data-theme="dark"] .auth-shell{background:linear-gradient(135deg,#0b111a,#111827)}
+    html[data-theme="dark"] .auth-card,
+    html[data-theme="dark"] .panel,
+    html[data-theme="dark"] .summary-card,
+    html[data-theme="dark"] .action-modal{background:var(--panel);color:var(--text)}
+    html[data-theme="dark"] input,
+    html[data-theme="dark"] select,
+    html[data-theme="dark"] textarea{background:#0f172a;border-color:var(--border);color:var(--text)}
+    html[data-theme="dark"] input::placeholder,
+    html[data-theme="dark"] textarea::placeholder{color:#64748b}
+    html[data-theme="dark"] .secondary,
+    html[data-theme="dark"] .connection-badge,
+    html[data-theme="dark"] .close-btn,
+    html[data-theme="dark"] .activity-response-btn,
+    html[data-theme="dark"] .instruction-type-btn,
+    html[data-theme="dark"] .building-btn,
+    html[data-theme="dark"] .dock-dest{background:#111827;border-color:var(--border);color:var(--text)}
+    html[data-theme="dark"] .connection-badge.live{background:#052e2b;border-color:#166534;color:#86efac}
+    html[data-theme="dark"] .connection-badge.offline{background:#3f1217;border-color:#7f1d1d;color:#fecaca}
+    html[data-theme="dark"] .building-body,
+    html[data-theme="dark"] .action-choice>button,
+    html[data-theme="dark"] .batch-selected-list{background:#111827}
+    html[data-theme="dark"] .building-body{border-color:#475569}
+    html[data-theme="dark"] .activity-item{background:#111827}
+    html[data-theme="dark"] .activity-item.actionable:hover{background:#182334;border-color:#64748b}
+    html[data-theme="dark"] .activity-item.search-match{background:#172554;border-color:#60a5fa;box-shadow:0 0 0 2px rgba(96,165,250,.2)}
+    html[data-theme="dark"] .chat-message{border-bottom-color:#334155}
+    html[data-theme="dark"] .action-choice,
+    html[data-theme="dark"] .action-panel,
+    html[data-theme="dark"] .modal-head,
+    html[data-theme="dark"] .modal-footer,
+    html[data-theme="dark"] .activity-controls,
+    html[data-theme="dark"] .chat-form{border-color:var(--border)}
+    html[data-theme="dark"] .instruction-type-btn.active,
+    html[data-theme="dark"] .building-btn.general-selected,
+    html[data-theme="dark"] .dock-dest.selected{background:#172554;color:#93c5fd;border-color:#60a5fa}
+    html[data-theme="dark"] .building-btn.active{color:#93c5fd;border-color:#60a5fa}
+    html[data-theme="dark"] .dock-dest.occupied{background:#0f172a;color:#64748b}
+    html[data-theme="dark"] .dock-dest.selected.occupied{background:#172554;color:#93c5fd}
+    html[data-theme="dark"] .move-current{background:#172554;color:#bfdbfe}
+    html[data-theme="dark"] .move-pending{background:#052e2b;color:#bbf7d0}
+    html[data-theme="dark"] .response-ontheway,
+    html[data-theme="dark"] .activity-response-btn.active.ontheway{background:#422006;color:#fde68a;border-color:#a16207}
+    html[data-theme="dark"] .response-done,
+    html[data-theme="dark"] .activity-response-btn.active.done{background:#052e16;color:#bbf7d0;border-color:#15803d}
+    html[data-theme="dark"] .response-clarification,
+    html[data-theme="dark"] .activity-response-btn.active.clarification{background:#450a0a;color:#fecaca;border-color:#b91c1c}
+    html[data-theme="dark"] .seal-done-btn{background:#14532d;color:#dcfce7;border-color:#bbf7d0}
+    html[data-theme="dark"] .seal-done-btn:hover{background:#166534}
+    html[data-theme="dark"] .status-option-btn.selected{border-color:#f8fafc;box-shadow:0 0 0 3px rgba(248,250,252,.18),inset 0 0 0 1px rgba(255,255,255,.3)}
+    html[data-theme="dark"] .theme-switch{background:#334155;border-color:#475569}
+    html[data-theme="dark"] .theme-switch[aria-checked="true"]{background:#1d4ed8;border-color:#60a5fa}
+    html[data-theme="dark"] .danger{background:#3f1217;border-color:#7f1d1d;color:#fecaca}
+
     @media(max-width:1250px){.board-grid{grid-template-columns:1fr}.active-users-panel{position:static}.summary-grid{grid-template-columns:repeat(4,minmax(105px,1fr))}}
     @media(max-width:900px){.activity-chat-grid{grid-template-columns:1fr}.chat-list{min-height:240px}}
     @media(max-width:720px){.activity-search-wrap{width:100%}.activity-search{width:100%}.section-heading.activity-heading{align-items:stretch;flex-direction:column}.activity-search-count{min-width:38px}#boardScreen{padding:10px}.topbar{align-items:flex-start;flex-direction:column}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{border-radius:12px;padding:13px}.dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}.building-picker{grid-template-columns:1fr 1fr}.chat-form{grid-template-columns:1fr}.chat-form button{width:100%}}
@@ -94,8 +183,16 @@
 
   <main id="boardScreen" class="hidden">
     <header class="topbar">
-      <div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions · <strong>v4.0.2</strong></p></div>
-      <div class="topbar-actions"><span id="connectionBadge" class="connection-badge">Connecting…</span><div class="sound-controls"><button id="soundToggle" class="secondary small sound-toggle" type="button" aria-pressed="true">🔊 Sound On</button><label class="sound-volume">Volume<select id="soundVolume" aria-label="Sound volume"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label></div><span id="userEmail" class="user-email"></span><button id="signOutBtn" class="secondary small">Sign out</button></div>
+      <div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions · <strong>v4.0.3</strong></p></div>
+      <div class="topbar-actions">
+        <span id="connectionBadge" class="connection-badge">Connecting…</span>
+        <div class="theme-control">
+          <span id="themeLabel" class="theme-label">☾ Dark</span>
+          <button id="themeToggle" class="theme-switch" type="button" role="switch" aria-checked="false" aria-label="Toggle dark theme"><span class="theme-thumb"></span></button>
+        </div>
+        <div class="sound-controls"><button id="soundToggle" class="secondary small sound-toggle" type="button" aria-pressed="true">🔊 Sound On</button><label class="sound-volume">Volume<select id="soundVolume" aria-label="Sound volume"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label></div>
+        <span id="userEmail" class="user-email"></span><button id="signOutBtn" class="secondary small">Sign out</button>
+      </div>
     </header>
 
     <div class="board-grid">
@@ -285,7 +382,7 @@
     const SESSION_KEY="live-trailer-board-tab-session-v1";
 
     const $=id=>document.getElementById(id);
-    const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote");
+    const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),themeToggle=$("themeToggle"),themeLabel=$("themeLabel"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote");
     const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusOptionGrid=$("statusOptionGrid"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),requestMoveType=$("requestMoveType"),requestAdjustType=$("requestAdjustType"),requestSealType=$("requestSealType"),moveDestinationArea=$("moveDestinationArea"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
     const batchBackdrop=$("batchBackdrop"),batchSubtitle=$("batchSubtitle"),batchSelectedList=$("batchSelectedList"),batchStatusOptionGrid=$("batchStatusOptionGrid"),batchCustomWrap=$("batchCustomWrap"),batchCustomText=$("batchCustomText"),batchInstructionTypeGrid=$("batchInstructionTypeGrid"),batchRequestMove=$("batchRequestMove"),batchRequestAdjust=$("batchRequestAdjust"),batchRequestSeal=$("batchRequestSeal"),batchMoveBuildingWrap=$("batchMoveBuildingWrap"),batchMove100=$("batchMove100"),batchMove200=$("batchMove200"),batchClearRequest=$("batchClearRequest"),closeBatch=$("closeBatch"),cancelBatch=$("cancelBatch"),applyBatchUpdate=$("applyBatchUpdate"),batchMessage=$("batchMessage");
 
@@ -295,7 +392,9 @@
     const HISTORY_WINDOW_MS=12*60*60*1000;
     let historyItems=[],historyAnchorMs=null,historyLoadedWindows=1,historyHasMore=true,historyLoading=false,historySortColumn="activity_last_at",historySearchIds=[],historySearchIndex=-1,historySearchToken=0;
     const warnedMoveKeys=new Set(),remindedMoveKeys=new Set(),pendingLocalActivitySounds=new Set(),pendingSealCompletionDockIds=new Set();
+    const THEME_KEY="live-trailer-board-theme-v1";
     const SOUND_ENABLED_KEY="live-trailer-board-sound-enabled-v1",SOUND_VOLUME_KEY="live-trailer-board-sound-volume-v1";
+    let currentTheme=document.documentElement.dataset.theme==="dark"?"dark":"light";
     let audioContext=null,soundEnabled=true,soundLevel=.5;
     const STATUS_META={
       "Open Dock":{cls:"status-open",short:"OPEN",color:"var(--open)"},
@@ -380,6 +479,32 @@
     const setConnection=(text,mode="")=>{connectionBadge.textContent=text;connectionBadge.className="connection-badge"+(mode?` ${mode}`:"")};
     const showLogin=()=>{loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
     const showBoard=()=>{loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
+
+    function applyTheme(theme,save=true){
+      currentTheme=theme==="dark"?"dark":"light";
+      document.documentElement.dataset.theme=currentTheme;
+      document.documentElement.style.colorScheme=currentTheme;
+      document.body.classList.toggle("dark-theme",currentTheme==="dark");
+
+      if(themeToggle){
+        const dark=currentTheme==="dark";
+        themeToggle.setAttribute("aria-checked",String(dark));
+        themeToggle.setAttribute("aria-label",dark?"Switch to light theme":"Switch to dark theme");
+      }
+      if(themeLabel)themeLabel.textContent=currentTheme==="dark"?"☀ Light":"☾ Dark";
+
+      const themeMeta=document.querySelector('meta[name="theme-color"]');
+      if(themeMeta)themeMeta.setAttribute("content",currentTheme==="dark"?"#0f1720":"#0f172a");
+
+      if(save){
+        try{localStorage.setItem(THEME_KEY,currentTheme)}catch(_err){}
+      }
+    }
+    function loadThemePreference(){
+      let stored=null;
+      try{stored=localStorage.getItem(THEME_KEY)}catch(_err){}
+      applyTheme(stored==="dark"?"dark":"light",false);
+    }
 
     function loadSoundPreferences(){
       try{
@@ -1593,6 +1718,9 @@
       activeUsersCount.textContent="0";activeUsersList.innerHTML='<div class="active-empty">Not signed in</div>';renderChat();
       if(doneExpiryTimer)clearTimeout(doneExpiryTimer);if(moveFadeTimer)clearInterval(moveFadeTimer);moveFadeTimer=null;showLogin()
     });
+    themeToggle.addEventListener("click",()=>{
+      applyTheme(currentTheme==="dark"?"light":"dark",true);
+    });
     soundToggle.addEventListener("click",()=>{
       soundEnabled=!soundEnabled;saveSoundPreferences();renderSoundControls();
       if(soundEnabled){unlockAudio();playSound("status")}
@@ -1655,6 +1783,7 @@
       }
       if(event==="SIGNED_OUT"){clearSavedSessions();for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel]){if(channel)supabase.removeChannel(channel)}dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;showLogin()}
     });
+    loadThemePreference();
     loadSoundPreferences();
     const saved=readSavedSession();
     if(saved?.session?.access_token&&saved?.session?.refresh_token){
