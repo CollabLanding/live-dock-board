@@ -61,7 +61,7 @@
     .status-open{background:var(--open)}.status-empty{background:var(--empty)}.status-loading{background:var(--loading)}.status-loaded{background:var(--loaded)}.status-ready{background:var(--ready)}.status-finished{background:var(--finished)}.status-threepl{background:var(--threepl)}.status-needempty{background:var(--needempty)}.status-custom{background:var(--custom)}.status-hold{background:var(--hold)}.status-oos{background:var(--oos)}
     .yard-label{display:flex;align-items:center;gap:14px;margin:8px 4px 16px;color:var(--muted);font-size:13px}.yard-label span{flex:1;height:1px;background:var(--border)}
     .building-body{min-height:150px;margin:14px 0;border:1px dashed #cbd5e1;border-radius:14px;display:grid;place-items:center;color:var(--muted);font-weight:900;letter-spacing:.04em;background:#f8fafc}
-    .legend{display:flex;flex-wrap:wrap;gap:14px 20px;font-size:13px}.legend span{display:inline-flex;gap:7px;align-items:center}.swatch{width:11px;height:11px;border-radius:3px}
+    .legend{display:flex;flex-wrap:wrap;gap:14px 20px;font-size:13px}.legend span{display:inline-flex;gap:7px;align-items:center}.swatch{width:11px;height:11px;border-radius:3px}.legend-actions{flex-basis:100%;display:flex;justify-content:flex-end;margin-top:2px}.clear-chat-btn{min-height:34px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#e5e7eb;color:#4b5563;font-size:11px;font-weight:800}.clear-chat-btn:hover{background:#d1d5db;border-color:#b6bec8}.clear-chat-btn:disabled{opacity:.55;cursor:not-allowed}
     .activity-search-wrap{display:flex;align-items:center;gap:7px;flex:0 0 auto}.activity-search{width:190px;min-height:36px;padding:7px 10px;font-size:12px}.activity-search-count{min-width:42px;text-align:right;color:var(--muted);font-size:10px;font-weight:800}.activity-list{display:grid;gap:8px;max-height:520px;overflow:auto}.activity-item{border:1px solid var(--border);border-radius:11px;padding:11px;background:#fff}.activity-item.search-match{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.16);background:#eff6ff}.activity-item.actionable{cursor:pointer}.activity-item.actionable:hover{border-color:#94a3b8;background:#f8fafc}.activity-item .time{margin-top:4px;font-size:12px;color:var(--muted)}.activity-empty{padding:26px;text-align:center;color:var(--muted)}
     .activity-topline{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.activity-copy{min-width:0}.activity-response{flex:0 0 auto;display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;letter-spacing:.02em;border:1px solid transparent}.response-ontheway{background:#fef9c3;color:#854d0e;border-color:#fde047}.response-done{background:#dcfce7;color:#166534;border-color:#86efac}.response-clarification{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.activity-hint{margin-top:6px;font-size:11px;font-weight:700;color:var(--accent)}.activity-controls{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}.activity-response-btn{min-height:38px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:7px 10px;font-size:12px;font-weight:850}.activity-response-btn:hover{border-color:#94a3b8}.activity-response-btn.active.ontheway{background:#fef9c3;border-color:#eab308;color:#713f12}.activity-response-btn.active.done{background:#dcfce7;border-color:#22c55e;color:#14532d}.activity-response-btn.active.clarification{background:#fee2e2;border-color:#ef4444;color:#7f1d1d}
     .board-grid{display:grid;grid-template-columns:minmax(0,1fr) 155px;gap:16px;align-items:start}.board-main{min-width:0}.active-users-panel{position:sticky;top:18px;margin-bottom:16px}.active-users-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.active-users-heading h2{margin:0;font-size:18px}.active-count{min-width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-size:12px;font-weight:900}.active-users-list{display:grid;gap:8px}.active-user{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:9px 8px;background:#fff;font-size:12px;font-weight:800;overflow:hidden}.active-user-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.active-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px #dcfce7;flex:0 0 auto}.active-empty{padding:12px 2px;color:var(--muted);font-size:12px;text-align:center}
@@ -166,6 +166,8 @@
     @media(max-width:1250px){.board-grid{grid-template-columns:1fr}.active-users-panel{position:static}.summary-grid{grid-template-columns:repeat(4,minmax(105px,1fr))}}
     @media(max-width:900px){.activity-chat-grid{grid-template-columns:1fr}.chat-list{min-height:240px}}
     @media(max-width:720px){.activity-search-wrap{width:100%}.activity-search{width:100%}.section-heading.activity-heading{align-items:stretch;flex-direction:column}.activity-search-count{min-width:38px}#boardScreen{padding:10px}.topbar{align-items:flex-start;flex-direction:column}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{border-radius:12px;padding:13px}.dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}.building-picker{grid-template-columns:1fr 1fr}.chat-form{grid-template-columns:1fr}.chat-form button{width:100%}}
+    html[data-theme="dark"] .clear-chat-btn{background:#303943;color:#cbd5df;border-color:#4b5865}
+    html[data-theme="dark"] .clear-chat-btn:hover{background:#39444f;border-color:#596775}
   </style>
 </head>
 <body>
@@ -256,6 +258,7 @@
       <span style="margin-left:auto"><i class="swatch" style="background:#facc15"></i>On It</span>
       <span><i class="swatch" style="background:#22c55e"></i>Done (5 min)</span>
       <span><i class="swatch" style="background:#ef4444"></i>Need Clarification</span>
+      <div class="legend-actions"><button id="clearChatHistory" class="clear-chat-btn" type="button">Clear Chat</button></div>
     </section>
       </div>
 
@@ -384,9 +387,10 @@
     const supabase=createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
     const REMEMBER_KEY="live-trailer-board-remembered-session-v1";
     const SESSION_KEY="live-trailer-board-tab-session-v1";
+    const CHAT_CLEAR_SENTINEL="__LIVE_TRAILER_BOARD_CLEAR_CHAT_V1__";
 
     const $=id=>document.getElementById(id);
-    const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),themeToggle=$("themeToggle"),themeLabel=$("themeLabel"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote");
+    const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),themeToggle=$("themeToggle"),themeLabel=$("themeLabel"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote"),clearChatHistoryBtn=$("clearChatHistory");
     const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusOptionGrid=$("statusOptionGrid"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),requestMoveType=$("requestMoveType"),requestAdjustType=$("requestAdjustType"),requestSealType=$("requestSealType"),moveDestinationArea=$("moveDestinationArea"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
     const batchBackdrop=$("batchBackdrop"),batchSubtitle=$("batchSubtitle"),batchSelectedList=$("batchSelectedList"),batchStatusOptionGrid=$("batchStatusOptionGrid"),batchCustomWrap=$("batchCustomWrap"),batchCustomText=$("batchCustomText"),batchInstructionTypeGrid=$("batchInstructionTypeGrid"),batchRequestMove=$("batchRequestMove"),batchRequestAdjust=$("batchRequestAdjust"),batchRequestSeal=$("batchRequestSeal"),batchMoveBuildingWrap=$("batchMoveBuildingWrap"),batchMove100=$("batchMove100"),batchMove200=$("batchMove200"),batchClearRequest=$("batchClearRequest"),closeBatch=$("closeBatch"),cancelBatch=$("cancelBatch"),applyBatchUpdate=$("applyBatchUpdate"),batchMessage=$("batchMessage");
 
@@ -640,10 +644,18 @@
           }
         });
     }
+    function visibleChatMessages(){
+      let lastClear=-1;
+      for(let i=0;i<chatMessages.length;i++){
+        if(chatMessages[i]?.message===CHAT_CLEAR_SENTINEL)lastClear=i;
+      }
+      return chatMessages.slice(lastClear+1).filter(row=>row?.message!==CHAT_CLEAR_SENTINEL);
+    }
     function renderChat(){
       if(!chatList)return;
-      if(!chatMessages.length){chatList.innerHTML='<div class="chat-empty">No messages yet.<br>Start the conversation.</div>';return}
-      chatList.innerHTML=chatMessages.map(row=>{
+      const visible=visibleChatMessages();
+      if(!visible.length){chatList.innerHTML='<div class="chat-empty">No messages yet.<br>Start the conversation.</div>';return}
+      chatList.innerHTML=visible.map(row=>{
         const when=new Date(row.created_at);
         const time=Number.isFinite(when.getTime())?when.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";
         return `<div class="chat-message" data-chat-id="${row.id}"><div class="chat-meta"><span class="chat-user">${safe(userName(row.user_email))}</span><span class="chat-time">${safe(time)}</span></div><div class="chat-text">${safe(row.message)}</div></div>`;
@@ -677,6 +689,28 @@
       chatSend.disabled=false;chatInput.disabled=false;
       if(error){chatNote.textContent="Could not send: "+error.message;chatInput.focus();return}
       chatInput.value="";chatNote.textContent="";upsertChatMessage(data);chatInput.focus();
+    }
+    async function clearChatHistory(){
+      if(!currentUser||!clearChatHistoryBtn)return;
+      if(!confirm("Clear the Team Chat history for everyone?"))return;
+      clearChatHistoryBtn.disabled=true;
+      chatNote.textContent="Clearing chat…";
+      try{
+        // Best-effort hard delete. The clear marker below guarantees every live client
+        // clears immediately even if the database's RLS policy does not allow DELETE.
+        await supabase.from("chat_messages").delete().gt("id",0);
+        const {data,error}=await supabase.from("chat_messages").insert({
+          user_id:currentUser.id,
+          user_email:currentUser.email||"",
+          message:CHAT_CLEAR_SENTINEL
+        }).select("id,user_id,user_email,message,created_at").single();
+        if(error){chatNote.textContent="Could not clear chat: "+error.message;await loadChat();return}
+        upsertChatMessage(data);
+        chatNote.textContent="Chat cleared.";
+        setTimeout(()=>{if(chatNote.textContent==="Chat cleared.")chatNote.textContent=""},1800);
+      }finally{
+        clearChatHistoryBtn.disabled=false;
+      }
     }
 
     async function loadDocks(){
@@ -1713,6 +1747,7 @@
 
     chatForm.addEventListener("submit",async e=>{e.preventDefault();await sendChatMessage()});
     chatInput.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatForm.requestSubmit()}});
+    clearChatHistoryBtn?.addEventListener("click",clearChatHistory);
     signOutBtn.addEventListener("click",async()=>{
       clearSavedSessions();
       try{if(presenceChannel)await presenceChannel.untrack()}catch(_err){}
