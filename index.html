@@ -1716,6 +1716,83 @@
         if(el)el.classList.add("search-match");
       }
     }
+    function isHistoryIdTypeMismatch(error){
+      const message=String(error?.message||"");
+      return error?.code==="22P02"&&/bigint/i.test(message);
+    }
+
+    async function completeMoveFallback(historyId,activity){
+      const sourceId=activity?.dock_id;
+      if(sourceId==null)return {error:new Error("Move activity is missing its source dock.")};
+
+      let source=docks.get(sourceId)||docks.get(Number(sourceId))||null;
+      if(!source){
+        const sourceResult=await supabase.from("docks").select("*").eq("id",sourceId).maybeSingle();
+        if(sourceResult.error)return {error:sourceResult.error};
+        source=sourceResult.data;
+      }
+      if(!source)return {error:new Error("Source dock could not be found.")};
+
+      const destinationBuilding=activity.new_move_to_building;
+      const destinationDock=activity.new_move_to_dock_number;
+
+      // Specific-dock moves transfer the trailer's current status to the
+      // destination before the source is opened.
+      if(destinationBuilding!=null&&destinationDock!=null){
+        const destinationResult=await supabase.from("docks")
+          .select("*")
+          .eq("building",destinationBuilding)
+          .eq("dock_number",destinationDock)
+          .maybeSingle();
+        if(destinationResult.error)return {error:destinationResult.error};
+        const destination=destinationResult.data;
+        if(!destination)return {error:new Error("Destination dock could not be found.")};
+        if(String(destination.id)===String(source.id))return {error:new Error("Source and destination docks cannot be the same.")};
+
+        const destinationPayload={
+          status:normalizedStatus(source.status),
+          custom_status_text:normalizedStatus(source.status)==="Custom"?(source.custom_status_text||null):null,
+          updated_by:currentUser.id,
+          updated_by_email:currentUser.email
+        };
+        const moved=await supabase.from("docks").update(destinationPayload).eq("id",destination.id);
+        if(moved.error)return {error:moved.error};
+      }
+
+      const opened=await supabase.from("docks").update({
+        status:"Open Dock",
+        custom_status_text:null,
+        instruction_type:null,
+        move_to_building:null,
+        move_to_dock_number:null,
+        move_instruction_at:null,
+        move_timer_paused_at:null,
+        move_timer_paused_ms:0,
+        updated_by:currentUser.id,
+        updated_by_email:currentUser.email
+      }).eq("id",source.id);
+      if(opened.error)return {error:opened.error};
+
+      const now=new Date().toISOString();
+      let activityUpdate=await supabase.from("dock_history").update({
+        activity_status:"Done",
+        activity_status_changed_at:now,
+        activity_status_changed_by:currentUser.id,
+        activity_status_changed_by_email:currentUser.email,
+        activity_last_at:now
+      }).eq("id",historyId);
+
+      if(activityUpdate.error&&String(activityUpdate.error.message||"").includes("activity_last_at")){
+        activityUpdate=await supabase.from("dock_history").update({
+          activity_status:"Done",
+          activity_status_changed_at:now,
+          activity_status_changed_by:currentUser.id,
+          activity_status_changed_by_email:currentUser.email
+        }).eq("id",historyId);
+      }
+      return activityUpdate.error?{error:activityUpdate.error}:{error:null};
+    }
+
     async function setActivityStatus(historyId,status){
       if(!ACTIVITY_META[status])return;
       const soundKey=`${historyId}|${status}`;
@@ -1727,12 +1804,14 @@
       if(activityReadError){pendingLocalActivitySounds.delete(soundKey);alert("Could not read move activity: "+activityReadError.message);return}
       activity=activityData;
 
-      // Completing a move is handled atomically in Supabase. For a move to a
-      // specific dock, the trailer status (and any Custom text) transfers to
-      // the destination dock, then the source dock becomes Open.
-      // General building moves also clear the source move and leave it Open.
+      // Prefer the atomic server-side completion routine. Older database
+      // installs defined p_history_id as bigint even though dock_history.id is
+      // UUID. For that specific mismatch, complete the same workflow directly.
       if(status==="Done"){
-        const {error:completeError}=await supabase.rpc("complete_move_activity",{p_history_id:historyId});
+        let {error:completeError}=await supabase.rpc("complete_move_activity",{p_history_id:historyId});
+        if(completeError&&isHistoryIdTypeMismatch(completeError)){
+          ({error:completeError}=await completeMoveFallback(historyId,activity));
+        }
         if(completeError){
           pendingLocalActivitySounds.delete(soundKey);
           alert("Could not complete move: "+completeError.message);
@@ -1808,13 +1887,13 @@
     }
     historyList.addEventListener("click",e=>{
       const statusBtn=e.target.closest("[data-activity-status]");
-      if(statusBtn){e.stopPropagation();setActivityStatus(Number(statusBtn.dataset.historyId),statusBtn.dataset.activityStatus);return}
+      if(statusBtn){e.stopPropagation();setActivityStatus(statusBtn.dataset.historyId,statusBtn.dataset.activityStatus);return}
       const item=e.target.closest(".activity-item.actionable");
       if(!item)return;
-      const id=Number(item.dataset.activityId);expandedActivityId=expandedActivityId===id?null:id;renderHistory(historyItems);
+      const id=item.dataset.activityId;expandedActivityId=expandedActivityId===id?null:id;renderHistory(historyItems);
     });
     historyList.addEventListener("keydown",e=>{
-      if((e.key==="Enter"||e.key===" ")&&e.target.matches(".activity-item.actionable")){e.preventDefault();const id=Number(e.target.dataset.activityId);expandedActivityId=expandedActivityId===id?null:id;renderHistory(historyItems)}
+      if((e.key==="Enter"||e.key===" ")&&e.target.matches(".activity-item.actionable")){e.preventDefault();const id=e.target.dataset.activityId;expandedActivityId=expandedActivityId===id?null:id;renderHistory(historyItems)}
     });
     function handleDockRealtime(payload){
       const row=payload.new||payload.old;if(!row)return;
