@@ -54,9 +54,9 @@
     .summary-grid{display:grid;grid-template-columns:repeat(12,minmax(90px,1fr));gap:10px;margin-bottom:16px}
     .summary-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px}.summary-card .label{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:center}.summary-card .value{font-size:27px;font-weight:900;margin-top:4px}.summary-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
     .section-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.section-heading h2{margin:0;font-size:20px}.section-heading p{margin:3px 0 0;color:var(--muted);font-size:13px}
-    .dock-scroll{overflow-x:auto;padding-bottom:6px}.dock-row{display:grid;gap:6px}.dock-row.thirty{grid-template-columns:repeat(30,minmax(62px,1fr));min-width:2010px}.dock-row.twenty-four{grid-template-columns:repeat(24,minmax(62px,1fr));min-width:1608px}
+    .dock-scroll{overflow-x:auto;padding-bottom:6px}.dock-row{display:flex;gap:6px;width:max-content;min-width:100%;align-items:stretch}.dock-row.thirty,.dock-row.twenty-four{min-width:100%}
     .dock-button{position:relative;border:0;border-radius:11px;min-height:86px;padding:8px 4px;color:#fff;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);user-select:none;-webkit-user-select:none}.dock-button.batch-selected{outline:4px solid #111827;outline-offset:2px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.78),0 0 0 2px rgba(255,255,255,.95)}
-    .dock-button.move-aging{transition:background-color 1s linear,color 1s linear}.dock-button:hover{filter:brightness(.96)}.dock-number{font-size:21px;font-weight:950;line-height:1}.dock-status{margin-top:7px;font-size:9px;font-weight:900;letter-spacing:.04em;line-height:1.15;white-space:normal;overflow-wrap:break-word;word-break:normal;max-width:100%;padding:0 2px}.dock-status.custom-label{font-size:10px;letter-spacing:0;text-transform:none;padding:0 2px}.dock-cell{position:relative;min-width:0}.dock-cell>.dock-button{width:100%;height:100%}.dock-move{margin:7px 3px 0;padding:3px 4px;border-radius:6px;background:rgba(15,23,42,.28);font-size:9px;font-weight:900;line-height:1.25}.dock-button.has-seal-check .dock-number{padding-top:18px}.seal-done-btn{position:absolute;top:5px;right:5px;z-index:6;min-height:27px;border:2px solid rgba(255,255,255,.95);border-radius:7px;background:#dcfce7;color:#14532d;padding:3px 7px;font-size:9px;font-weight:950;box-shadow:0 2px 6px rgba(15,23,42,.25)}.seal-done-btn:hover{background:#bbf7d0}.seal-done-btn:disabled{opacity:.6;cursor:wait}
+    .dock-button.move-aging{transition:background-color 1s linear,color 1s linear}.dock-button:hover{filter:brightness(.96)}.dock-number{font-size:21px;font-weight:950;line-height:1}.dock-status{margin-top:7px;font-size:9px;font-weight:900;letter-spacing:.04em;line-height:1.15;white-space:normal;overflow-wrap:break-word;word-break:normal;max-width:100%;padding:0 2px}.dock-status.custom-label{font-size:10px;letter-spacing:0;text-transform:none;padding:0 2px}.dock-cell{position:relative;min-width:62px;flex:0 0 62px}.dock-cell>.dock-button{width:100%;height:100%}.dock-cell.hidden-dock-cell{min-width:14px;max-width:14px;flex:0 0 14px}.dock-hidden-bar{display:flex;align-items:center;justify-content:center;width:14px;height:86px;min-height:86px;border:0;border-radius:5px;background:#94a3b8;color:#334155;padding:0;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(15,23,42,.18)}.dock-hidden-bar:hover{background:#64748b;color:#fff}.dock-hidden-bar span{font-size:8px;font-weight:950;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.02em}.dock-move{margin:7px 3px 0;padding:3px 4px;border-radius:6px;background:rgba(15,23,42,.28);font-size:9px;font-weight:900;line-height:1.25}.dock-button.has-seal-check .dock-number{padding-top:18px}.seal-done-btn{position:absolute;top:5px;right:5px;z-index:6;min-height:27px;border:2px solid rgba(255,255,255,.95);border-radius:7px;background:#dcfce7;color:#14532d;padding:3px 7px;font-size:9px;font-weight:950;box-shadow:0 2px 6px rgba(15,23,42,.25)}.seal-done-btn:hover{background:#bbf7d0}.seal-done-btn:disabled{opacity:.6;cursor:wait}
     .dock-activity-flag{position:absolute;top:6px;right:6px;width:15px;height:15px;border-radius:3px;border:2px solid rgba(255,255,255,.88);box-shadow:0 1px 4px rgba(15,23,42,.3)}.flag-ontheway{background:#facc15}.flag-done{background:#22c55e}.flag-clarification{background:#ef4444}
     .status-open{background:var(--open)}.status-empty{background:var(--empty)}.status-loading{background:var(--loading)}.status-loaded{background:var(--loaded)}.status-ready{background:var(--ready)}.status-finished{background:var(--finished)}.status-threepl{background:var(--threepl)}.status-needempty{background:var(--needempty)}.status-custom{background:var(--custom)}.status-hold{background:var(--hold)}.status-oos{background:var(--oos)}
     .yard-label{display:flex;align-items:center;gap:14px;margin:8px 4px 16px;color:var(--muted);font-size:13px}.yard-label span{flex:1;height:1px;background:var(--border)}
@@ -70,7 +70,7 @@
     .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:18px;z-index:50}
     .action-modal{width:min(650px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.34)}
     .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
-    .modal-head h2{margin:0;font-size:24px}.modal-head p{margin:4px 0 0;color:var(--muted)}.close-btn{border:1px solid var(--border);background:#fff;border-radius:9px;width:42px;height:42px;font-size:22px}
+    .modal-head h2{margin:0;font-size:24px}.modal-head p{margin:4px 0 0;color:var(--muted)}.modal-head-actions{display:flex;align-items:center;gap:7px}.hide-dock-header-btn{height:42px;border:1px solid #cbd5e1;background:#e2e8f0;color:#334155;border-radius:9px;padding:0 13px;font-size:12px;font-weight:900}.hide-dock-header-btn:hover{background:#cbd5e1}.close-btn{border:1px solid var(--border);background:#fff;border-radius:9px;width:42px;height:42px;font-size:22px}
     .modal-body{padding:18px 20px 22px}.action-choice{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}.action-choice>button{width:100%;border:0;background:#f8fafc;text-align:left;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;font-weight:900;color:var(--text)}
     .action-choice>button .hint{font-size:12px;color:var(--muted);font-weight:600}.action-panel{padding:15px 16px;border-top:1px solid var(--border)}
     .status-select-row{display:grid;gap:12px;align-items:end}.status-option-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.status-option-btn{position:relative;min-height:58px;border:2px solid transparent;border-radius:11px;padding:8px 7px;color:#fff;font-size:12px;font-weight:900;line-height:1.15;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);white-space:normal}.status-option-btn:hover{filter:brightness(.96)}.status-option-btn.selected{border-color:#0f172a;box-shadow:0 0 0 3px rgba(15,23,42,.16),inset 0 0 0 1px rgba(255,255,255,.3)}.status-option-btn.selected::after{content:"✓";position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:999px;display:grid;place-items:center;background:#fff;color:#0f172a;font-size:11px}.status-option-btn.status-loading{color:#fff}@media(max-width:620px){.status-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -162,6 +162,10 @@
     html[data-theme="dark"] .active-count{background:#123225;border-color:#286e4c;color:#7ee2ae}
     html[data-theme="dark"] .active-dot{background:#38d27d;box-shadow:0 0 0 3px rgba(56,210,125,.16)}
     html[data-theme="dark"] .active-empty{color:#91a0ad}
+    html[data-theme="dark"] .hide-dock-header-btn{background:#273444;border-color:#475569;color:#d9e2ea}
+    html[data-theme="dark"] .hide-dock-header-btn:hover{background:#334155}
+    html[data-theme="dark"] .dock-hidden-bar{background:#52606d;color:#cbd5e1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+    html[data-theme="dark"] .dock-hidden-bar:hover{background:#64748b;color:#fff}
 
     @media(max-width:1250px){.board-grid{grid-template-columns:1fr}.active-users-panel{position:static}.summary-grid{grid-template-columns:repeat(4,minmax(105px,1fr))}}
     @media(max-width:900px){.activity-chat-grid{grid-template-columns:1fr}.chat-list{min-height:240px}}
@@ -189,7 +193,7 @@
 
   <main id="boardScreen" class="hidden">
     <header class="topbar">
-      <div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions · <strong>v4.0.4</strong></p></div>
+      <div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions · <strong>v4.1</strong></p></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge">Connecting…</span>
         <div class="theme-control">
@@ -274,7 +278,10 @@
   <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
     <header class="modal-head">
       <div><h2 id="actionTitle">Dock</h2><p id="actionSubtitle"></p></div>
-      <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
+      <div class="modal-head-actions">
+        <button id="hideDockButton" class="hide-dock-header-btn" type="button" title="Hide this dock / Ocultar esta puerta">Hide</button>
+        <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
+      </div>
     </header>
     <div class="modal-body">
       <div class="action-choice">
@@ -391,7 +398,7 @@
 
     const $=id=>document.getElementById(id);
     const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),themeToggle=$("themeToggle"),themeLabel=$("themeLabel"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote"),clearChatHistoryBtn=$("clearChatHistory");
-    const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusOptionGrid=$("statusOptionGrid"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),requestMoveType=$("requestMoveType"),requestAdjustType=$("requestAdjustType"),requestSealType=$("requestSealType"),moveDestinationArea=$("moveDestinationArea"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
+    const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),hideDockButton=$("hideDockButton"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusOptionGrid=$("statusOptionGrid"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),requestMoveType=$("requestMoveType"),requestAdjustType=$("requestAdjustType"),requestSealType=$("requestSealType"),moveDestinationArea=$("moveDestinationArea"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
     const batchBackdrop=$("batchBackdrop"),batchSubtitle=$("batchSubtitle"),batchSelectedList=$("batchSelectedList"),batchStatusOptionGrid=$("batchStatusOptionGrid"),batchCustomWrap=$("batchCustomWrap"),batchCustomText=$("batchCustomText"),batchInstructionTypeGrid=$("batchInstructionTypeGrid"),batchRequestMove=$("batchRequestMove"),batchRequestAdjust=$("batchRequestAdjust"),batchRequestSeal=$("batchRequestSeal"),batchMoveBuildingWrap=$("batchMoveBuildingWrap"),batchMove100=$("batchMove100"),batchMove200=$("batchMove200"),batchClearRequest=$("batchClearRequest"),closeBatch=$("closeBatch"),cancelBatch=$("cancelBatch"),applyBatchUpdate=$("applyBatchUpdate"),batchMessage=$("batchMessage");
 
     const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,chatChannel=null,presenceChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],chatMessages=[],doneExpiryTimer=null,moveFadeTimer=null;
@@ -719,6 +726,7 @@
       docks.clear();
       (data||[]).forEach(d=>{
         d.status=normalizedStatus(d.status);
+        d.is_hidden=Boolean(d.is_hidden);
         docks.set(d.id,d);
       });
       renderEverything();
@@ -1089,6 +1097,44 @@
       if(at!=="Move")return true;
       return sameMove(aBuilding,aDock,bBuilding,bDock);
     }
+    async function setDockCollapsed(dockId,hidden){
+      const dock=docks.get(dockId);
+      if(!dock)return false;
+
+      const previous=Boolean(dock.is_hidden);
+      dock.is_hidden=Boolean(hidden);
+      renderEverything();
+
+      const {data,error}=await supabase.rpc("set_docks_hidden",{
+        p_dock_ids:[dockId],
+        p_hidden:Boolean(hidden)
+      });
+
+      if(error){
+        dock.is_hidden=previous;
+        renderEverything();
+        alert((hidden?"Could not hide dock: ":"Could not unhide dock: ")+error.message);
+        return false;
+      }
+
+      const returned=Array.isArray(data)?data[0]:null;
+      if(returned){
+        returned.status=normalizedStatus(returned.status);
+        returned.is_hidden=Boolean(returned.is_hidden);
+        docks.set(returned.id,returned);
+      }else{
+        dock.is_hidden=Boolean(hidden);
+      }
+
+      renderEverything();
+      return true;
+    }
+    async function hideCurrentDock(){
+      if(!selectedDockId)return;
+      const dockId=selectedDockId;
+      closeModal();
+      await setDockCollapsed(dockId,true);
+    }
     async function completeSealCheck(dockId,button){
       if(button)button.disabled=true;
       pendingSealCompletionDockIds.add(dockId);
@@ -1105,6 +1151,27 @@
     }
     function renderRow(id,items){
       const c=$(id);c.innerHTML="";items.forEach(d=>{
+        if(d.is_hidden){
+          const cell=document.createElement("div");
+          cell.className="dock-cell hidden-dock-cell";
+
+          const bar=document.createElement("button");
+          bar.type="button";
+          bar.className="dock-hidden-bar";
+          bar.title=`Building ${d.building}, Dock ${d.dock_number} hidden — click to unhide`;
+          bar.setAttribute("aria-label",`Building ${d.building}, Dock ${d.dock_number} hidden. Click to unhide.`);
+          bar.innerHTML=`<span>${d.dock_number}</span>`;
+          bar.addEventListener("click",e=>{
+            e.preventDefault();
+            e.stopPropagation();
+            setDockCollapsed(d.id,false);
+          });
+
+          cell.appendChild(bar);
+          c.appendChild(cell);
+          return;
+        }
+
         const st=normalizedStatus(d.status),meta=STATUS_META[st]||STATUS_META["Open Dock"],indicator=activityIndicators.get(d.id),b=document.createElement("button");
         const requestType=activeInstructionType(d);
         const statusDisplay=st==="Custom"?(String(d.custom_status_text||"CUSTOM").trim()||"CUSTOM"):meta.short;
@@ -1682,6 +1749,7 @@
         docks.delete(row.id);
       }else{
         row.status=normalizedStatus(row.status);
+        row.is_hidden=Boolean(row.is_hidden);
         if(previous&&payload.eventType==="UPDATE"){
           const statusChanged=normalizedStatus(previous.status)!==row.status;
           const previousType=activeInstructionType(previous),nextType=activeInstructionType(row);
@@ -1770,6 +1838,7 @@
     });
     document.addEventListener("pointerdown",unlockAudio,{capture:true});
     document.addEventListener("keydown",unlockAudio,{capture:true});
+    hideDockButton.addEventListener("click",hideCurrentDock);
     closeAction.addEventListener("click",closeModal);actionBackdrop.addEventListener("click",e=>{if(e.target===actionBackdrop)closeModal()});
     closeBatch.addEventListener("click",()=>closeBatchModal(true));
     cancelBatch.addEventListener("click",()=>closeBatchModal(true));
