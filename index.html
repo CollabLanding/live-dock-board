@@ -49,7 +49,7 @@
     .login-company-logo{margin:0 0 14px;width:72px!important;height:74px!important;flex-basis:72px!important}
     @media(max-width:760px){.topbar-brand{align-items:flex-start}.company-logo{width:48px!important;height:50px!important;flex-basis:48px!important}}
     @media(max-width:560px){.topbar-brand{gap:10px}.company-logo{width:44px!important;height:46px!important;flex-basis:44px!important}}
-    .topbar h1{margin:0;font-size:clamp(24px,3vw,34px)}.topbar p{margin:3px 0 0;color:var(--muted)}
+    .topbar h1{margin:0;font-size:clamp(24px,3vw,34px)}.topbar p{margin:3px 0 0;color:var(--muted)}.topbar-page-link{color:var(--accent);font-weight:850;text-decoration:none}.topbar-page-link:hover{text-decoration:underline}
     .topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.user-email{font-size:13px;color:var(--muted)}
     .sound-controls{display:flex;align-items:center;gap:7px}.sound-toggle{white-space:nowrap}.sound-volume{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--muted)}.sound-volume select{width:auto;min-width:72px;min-height:36px;padding:6px 8px;border-radius:9px}
     .theme-switch{margin:0;display:flex;flex-direction:row;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none}.theme-switch input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.switch-track{width:48px;height:26px;border-radius:999px;background:#394754;border:1px solid #53616e;padding:2px;display:block;position:relative;transition:background .18s ease,border-color .18s ease}.switch-thumb{display:block;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.28);transform:translateX(0);transition:transform .2s ease,background .18s ease}.theme-switch input:checked + .switch-track{background:#326f99;border-color:#5a98c1}.theme-switch input:checked + .switch-track .switch-thumb{transform:translateX(22px)}.theme-switch:focus-within .switch-track{outline:2px solid rgba(119,167,202,.55);outline-offset:2px}.theme-label{opacity:.72;transition:opacity .18s ease}.theme-switch:not(:has(input:checked)) .light-label,.theme-switch:has(input:checked) .dark-label{opacity:1}
@@ -199,7 +199,7 @@
 
   <main id="boardScreen" class="hidden">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div><h1>Live Trailer Board</h1><p>Dropped trailer status & movement instructions · <strong>v4.2.2</strong></p></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div><h1>Live Trailer Board</h1><p><a class="topbar-page-link" href="/Transfers/">Transfers</a> · <strong>v4.2.3</strong></p></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge">Connecting…</span>
         <label class="theme-switch" for="themeToggle">
