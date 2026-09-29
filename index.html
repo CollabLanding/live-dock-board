@@ -1997,8 +1997,7 @@
         }
         moveCompletionBusy=false;
         moveCompletionDockPicker.querySelectorAll("button").forEach(button=>{
-          const n=Number(button.textContent);
-          button.disabled=!Number.isFinite(n)||n!==destinationDock?button.disabled:false;
+          button.disabled=button.classList.contains("occupied")||button.classList.contains("source");
         });
         moveCompletionMessage.style.color="#b91c1c";
         moveCompletionMessage.textContent=error?.message||"Could not complete move.";
