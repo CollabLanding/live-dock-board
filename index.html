@@ -1824,8 +1824,8 @@
       return activityUpdate.error?{error:activityUpdate.error}:{error:null};
     }
 
-    function closeMoveCompletionPicker(){
-      if(moveCompletionBusy)return;
+    function closeMoveCompletionPicker(force=false){
+      if(moveCompletionBusy&&!force)return;
       moveCompletionBackdrop.classList.add("hidden");
       pendingMoveCompletion=null;
       moveCompletionDockPicker.innerHTML="";
@@ -1982,7 +1982,8 @@
         pendingLocalActivitySounds.delete(`${historyId}|Done`);
         playSound("done");
         expandedActivityId=historyId;
-        closeMoveCompletionPicker();
+        moveCompletionBusy=false;
+        closeMoveCompletionPicker(true);
         await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
       }catch(error){
         if(historyUpdated){
