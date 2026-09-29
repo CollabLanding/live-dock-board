@@ -178,6 +178,15 @@
     @media(max-width:720px){.activity-search-wrap{width:100%}.activity-search{width:100%}.section-heading.activity-heading{align-items:stretch;flex-direction:column}.activity-search-count{min-width:38px}#boardScreen{padding:10px}.topbar{align-items:flex-start;flex-direction:column}.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{border-radius:12px;padding:13px}.dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}.building-picker{grid-template-columns:1fr 1fr}.chat-form{grid-template-columns:1fr}.chat-form button{width:100%}}
     html[data-theme="dark"] .clear-chat-btn{background:#303943;color:#cbd5df;border-color:#4b5865}
     html[data-theme="dark"] .clear-chat-btn:hover{background:#39444f;border-color:#596775}
+
+    .move-completion-modal{width:min(680px,100%)}
+    .move-completion-help{margin:0 0 14px;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;color:var(--muted);font-size:12px;line-height:1.45}
+    .completion-dock-picker{grid-template-columns:repeat(10,minmax(42px,1fr));max-height:390px;overflow:auto;padding:2px}
+    .completion-dock-btn{min-height:50px;font-size:16px}
+    .completion-dock-btn.occupied,.completion-dock-btn.source{opacity:.42}
+    .completion-dock-btn:disabled{cursor:not-allowed;filter:none}
+    html[data-theme="dark"] .move-completion-help{background:#111827;color:var(--muted);border-color:var(--border)}
+    @media(max-width:620px){.completion-dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}}
   </style>
 </head>
 <body>
@@ -391,6 +400,25 @@
   </section>
 </div>
 
+<div id="moveCompletionBackdrop" class="modal-backdrop hidden" role="presentation">
+  <section class="action-modal move-completion-modal" role="dialog" aria-modal="true" aria-labelledby="moveCompletionTitle">
+    <header class="modal-head">
+      <div>
+        <h2 id="moveCompletionTitle">Choose Destination Dock / Elegir puerta de destino</h2>
+        <p id="moveCompletionSubtitle"></p>
+      </div>
+      <button id="closeMoveCompletion" class="close-btn" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="modal-body">
+      <div class="move-completion-help">
+        This move was requested for the building without a specific dock. Select the dock where the trailer arrived to complete the move.
+      </div>
+      <div id="moveCompletionDockPicker" class="dock-picker completion-dock-picker" role="group" aria-label="Destination dock"></div>
+      <div id="moveCompletionMessage" class="modal-message" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (async()=>{
@@ -409,8 +437,9 @@
     const loginScreen=$("loginScreen"),boardScreen=$("boardScreen"),loginForm=$("loginForm"),loginMessage=$("loginMessage"),email=$("email"),password=$("password"),staySignedIn=$("staySignedIn"),userEmail=$("userEmail"),signOutBtn=$("signOutBtn"),connectionBadge=$("connectionBadge"),summaryCards=$("summaryCards"),historyList=$("historyList"),themeToggle=$("themeToggle"),soundToggle=$("soundToggle"),soundVolume=$("soundVolume"),activeUsersList=$("activeUsersList"),activeUsersCount=$("activeUsersCount"),activitySearch=$("activitySearch"),activitySearchCount=$("activitySearchCount"),historyRangeNote=$("historyRangeNote"),chatList=$("chatList"),chatForm=$("chatForm"),chatInput=$("chatInput"),chatSend=$("chatSend"),chatNote=$("chatNote"),clearChatHistoryBtn=$("clearChatHistory");
     const actionBackdrop=$("actionBackdrop"),actionTitle=$("actionTitle"),actionSubtitle=$("actionSubtitle"),hideDockButton=$("hideDockButton"),closeAction=$("closeAction"),statusToggle=$("statusToggle"),moveToggle=$("moveToggle"),statusPanel=$("statusPanel"),movePanel=$("movePanel"),statusOptionGrid=$("statusOptionGrid"),statusSelect=$("statusSelect"),customStatusWrap=$("customStatusWrap"),customStatusText=$("customStatusText"),applyUpdate=$("applyUpdate"),requestMoveType=$("requestMoveType"),requestAdjustType=$("requestAdjustType"),requestSealType=$("requestSealType"),moveDestinationArea=$("moveDestinationArea"),pick100=$("pick100"),pick200=$("pick200"),dockPickerWrap=$("dockPickerWrap"),dockPickerTitle=$("dockPickerTitle"),dockPicker=$("dockPicker"),currentMove=$("currentMove"),pendingMoveEl=$("pendingMove"),clearMove=$("clearMove"),modalMessage=$("modalMessage");
     const batchBackdrop=$("batchBackdrop"),batchSubtitle=$("batchSubtitle"),batchSelectedList=$("batchSelectedList"),batchStatusOptionGrid=$("batchStatusOptionGrid"),batchCustomWrap=$("batchCustomWrap"),batchCustomText=$("batchCustomText"),batchInstructionTypeGrid=$("batchInstructionTypeGrid"),batchRequestMove=$("batchRequestMove"),batchRequestAdjust=$("batchRequestAdjust"),batchRequestSeal=$("batchRequestSeal"),batchMoveBuildingWrap=$("batchMoveBuildingWrap"),batchMove100=$("batchMove100"),batchMove200=$("batchMove200"),batchClearRequest=$("batchClearRequest"),hideBatchDocks=$("hideBatchDocks"),closeBatch=$("closeBatch"),cancelBatch=$("cancelBatch"),applyBatchUpdate=$("applyBatchUpdate"),batchMessage=$("batchMessage");
+    const moveCompletionBackdrop=$("moveCompletionBackdrop"),moveCompletionSubtitle=$("moveCompletionSubtitle"),moveCompletionDockPicker=$("moveCompletionDockPicker"),moveCompletionMessage=$("moveCompletionMessage"),closeMoveCompletion=$("closeMoveCompletion");
 
-    const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,chatChannel=null,presenceChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],chatMessages=[],doneExpiryTimer=null,moveFadeTimer=null;
+    const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,chatChannel=null,presenceChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],chatMessages=[],doneExpiryTimer=null,moveFadeTimer=null,pendingMoveCompletion=null,moveCompletionBusy=false;
     const batchSelectedDockIds=new Set();
     let batchStatusValue="",batchInstructionValue="",batchMoveBuilding=null,batchClearInstruction=false;
     let batchDragActive=false,batchDragMoved=false,batchDragStartId=null,suppressDockClickUntil=0;
@@ -1795,16 +1824,203 @@
       return activityUpdate.error?{error:activityUpdate.error}:{error:null};
     }
 
+    function closeMoveCompletionPicker(){
+      if(moveCompletionBusy)return;
+      moveCompletionBackdrop.classList.add("hidden");
+      pendingMoveCompletion=null;
+      moveCompletionDockPicker.innerHTML="";
+      moveCompletionMessage.textContent="";
+      moveCompletionMessage.style.color="";
+    }
+
+    function openMoveCompletionPicker(historyId,activity){
+      const building=Number(activity?.new_move_to_building);
+      if(!Number.isFinite(building)){
+        alert("This Move is missing its destination building.");
+        return;
+      }
+
+      pendingMoveCompletion={historyId:String(historyId),activity:{...activity}};
+      moveCompletionBusy=false;
+      moveCompletionSubtitle.textContent=`Move to Building ${building} / Mover a Edificio ${building} — select the destination dock`;
+      moveCompletionMessage.textContent="";
+      moveCompletionMessage.style.color="";
+      moveCompletionDockPicker.innerHTML="";
+
+      const source=docks.get(activity.dock_id);
+      const destinations=[...docks.values()]
+        .filter(d=>Number(d.building)===building)
+        .sort((a,b)=>Number(a.dock_number)-Number(b.dock_number));
+
+      if(!destinations.length){
+        moveCompletionMessage.style.color="#b91c1c";
+        moveCompletionMessage.textContent="No docks were found for this destination building.";
+      }
+
+      destinations.forEach(dest=>{
+        const button=document.createElement("button");
+        button.type="button";
+        button.className="dock-dest completion-dock-btn";
+        button.textContent=String(dest.dock_number);
+
+        const isSource=source&&String(dest.id)===String(source.id);
+        const open=normalizedStatus(dest.status)==="Open Dock";
+        if(isSource){
+          button.classList.add("source");
+          button.disabled=true;
+          button.title="This is the source dock / Esta es la puerta de origen";
+        }else if(!open){
+          button.classList.add("occupied");
+          button.disabled=true;
+          button.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`;
+        }else{
+          button.title=`Complete move at Dock ${dest.dock_number} / Completar movimiento en puerta ${dest.dock_number}`;
+          button.addEventListener("click",()=>completeMoveFromPicker(dest));
+        }
+
+        moveCompletionDockPicker.appendChild(button);
+      });
+
+      moveCompletionBackdrop.classList.remove("hidden");
+    }
+
+    async function completeMoveFromPicker(destination){
+      if(moveCompletionBusy||!pendingMoveCompletion)return;
+      const {historyId,activity}=pendingMoveCompletion;
+      const destinationBuilding=Number(activity?.new_move_to_building);
+      const destinationDock=Number(destination?.dock_number);
+      if(!Number.isFinite(destinationBuilding)||!Number.isFinite(destinationDock)){
+        moveCompletionMessage.style.color="#b91c1c";
+        moveCompletionMessage.textContent="Invalid destination dock.";
+        return;
+      }
+
+      moveCompletionBusy=true;
+      moveCompletionMessage.style.color="";
+      moveCompletionMessage.textContent="Completing move… / Completando movimiento…";
+      moveCompletionDockPicker.querySelectorAll("button").forEach(button=>{button.disabled=true});
+
+      let sourceUpdated=false;
+      let historyUpdated=false;
+
+      try{
+        const {data:freshActivity,error:activityError}=await supabase.from("dock_history")
+          .select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status")
+          .eq("id",historyId)
+          .maybeSingle();
+        if(activityError)throw activityError;
+        if(!freshActivity)throw new Error("Move request was not found.");
+        if(freshActivity.activity_status)throw new Error("This move has already been completed.");
+        if(String(freshActivity.new_instruction_type||"Move")!=="Move")throw new Error("This request is no longer a Move.");
+        if(Number(freshActivity.new_move_to_building)!==destinationBuilding)throw new Error("The destination building has changed.");
+
+        const {data:destRow,error:destError}=await supabase.from("docks")
+          .select("*")
+          .eq("id",destination.id)
+          .maybeSingle();
+        if(destError)throw destError;
+        if(!destRow)throw new Error("Destination dock was not found.");
+        if(Number(destRow.building)!==destinationBuilding||Number(destRow.dock_number)!==destinationDock)throw new Error("Destination dock is no longer valid.");
+        if(normalizedStatus(destRow.status)!=="Open Dock")throw new Error("That dock is no longer open.");
+
+        const sourceId=freshActivity.dock_id;
+        const {data:sourceRow,error:sourceReadError}=await supabase.from("docks")
+          .select("*")
+          .eq("id",sourceId)
+          .maybeSingle();
+        if(sourceReadError)throw sourceReadError;
+        if(!sourceRow)throw new Error("Source dock was not found.");
+        if(String(sourceRow.id)===String(destRow.id))throw new Error("Source and destination cannot be the same dock.");
+        if(String(activeInstructionType(sourceRow)||"")!=="Move"||
+           Number(sourceRow.move_to_building)!==destinationBuilding||
+           sourceRow.move_to_dock_number!=null){
+          throw new Error("This move is no longer a general Move request.");
+        }
+
+        const sourceUpdate=await supabase.from("docks").update({
+          move_to_dock_number:destinationDock,
+          updated_by:currentUser.id,
+          updated_by_email:currentUser.email
+        }).eq("id",sourceId)
+          .eq("move_to_building",destinationBuilding)
+          .is("move_to_dock_number",null)
+          .eq("instruction_type","Move")
+          .select("*")
+          .maybeSingle();
+        if(sourceUpdate.error)throw sourceUpdate.error;
+        if(!sourceUpdate.data)throw new Error("The move request changed before the dock was selected.");
+        sourceUpdated=true;
+
+        const historyUpdate=await supabase.from("dock_history").update({
+          new_move_to_dock_number:destinationDock
+        }).eq("id",historyId)
+          .eq("new_move_to_building",destinationBuilding)
+          .is("new_move_to_dock_number",null)
+          .eq("new_instruction_type","Move")
+          .is("activity_status",null)
+          .select("*")
+          .maybeSingle();
+        if(historyUpdate.error)throw historyUpdate.error;
+        if(!historyUpdate.data)throw new Error("The move history changed before it could be completed.");
+        historyUpdated=true;
+
+        const updatedActivity={...freshActivity,new_move_to_dock_number:destinationDock};
+        let {error:completeError}=await supabase.rpc("complete_move_activity",{p_history_id:historyId});
+        if(completeError&&isHistoryIdTypeMismatch(completeError)){
+          ({error:completeError}=await completeMoveFallback(historyId,updatedActivity));
+        }
+        if(completeError)throw completeError;
+
+        const localSource=docks.get(sourceId);
+        if(localSource){
+          localSource.move_to_dock_number=destinationDock;
+          localSource.updated_by=currentUser.id;
+          localSource.updated_by_email=currentUser.email;
+        }
+
+        activityStatusCache.set(historyId,"Done");
+        pendingLocalActivitySounds.delete(`${historyId}|Done`);
+        playSound("done");
+        expandedActivityId=historyId;
+        closeMoveCompletionPicker();
+        await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
+      }catch(error){
+        if(historyUpdated){
+          await supabase.from("dock_history").update({new_move_to_dock_number:null}).eq("id",historyId).eq("new_move_to_dock_number",destinationDock);
+        }
+        if(sourceUpdated){
+          await supabase.from("docks").update({
+            move_to_dock_number:null,
+            updated_by:currentUser.id,
+            updated_by_email:currentUser.email
+          }).eq("id",activity.dock_id).eq("move_to_dock_number",destinationDock);
+        }
+        moveCompletionBusy=false;
+        moveCompletionDockPicker.querySelectorAll("button").forEach(button=>{
+          const n=Number(button.textContent);
+          button.disabled=!Number.isFinite(n)||n!==destinationDock?button.disabled:false;
+        });
+        moveCompletionMessage.style.color="#b91c1c";
+        moveCompletionMessage.textContent=error?.message||"Could not complete move.";
+      }
+    }
+
     async function setActivityStatus(historyId,status){
       if(!ACTIVITY_META[status])return;
       const soundKey=`${historyId}|${status}`;
       pendingLocalActivitySounds.add(soundKey);
       let activity=null;
       const {data:activityData,error:activityReadError}=await supabase.from("dock_history")
-        .select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type")
+        .select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status")
         .eq("id",historyId).single();
       if(activityReadError){pendingLocalActivitySounds.delete(soundKey);alert("Could not read move activity: "+activityReadError.message);return}
       activity=activityData;
+
+      if(status==="Done"&&String(activity.new_instruction_type||"Move")==="Move"&&activity.new_move_to_building!=null&&activity.new_move_to_dock_number==null&&activity.activity_status==null){
+        pendingLocalActivitySounds.delete(soundKey);
+        openMoveCompletionPicker(historyId,activity);
+        return;
+      }
 
       // Prefer the atomic server-side completion routine. Older database
       // installs defined p_history_id as bigint even though dock_history.id is
@@ -2063,6 +2279,13 @@
     pick100.addEventListener("click",()=>{renderInstructionTypeButtons("Move");renderDestinationDocks(100)});
     pick200.addEventListener("click",()=>{renderInstructionTypeButtons("Move");renderDestinationDocks(200)});
     clearMove.addEventListener("click",markClearMove);
+    closeMoveCompletion.addEventListener("click",closeMoveCompletionPicker);
+    moveCompletionBackdrop.addEventListener("click",event=>{
+      if(event.target===moveCompletionBackdrop)closeMoveCompletionPicker();
+    });
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&!moveCompletionBackdrop.classList.contains("hidden"))closeMoveCompletionPicker();
+    });
     supabase.auth.onAuthStateChange((event,session)=>{
       if(event==="TOKEN_REFRESHED"&&session){
         let remember=false;try{remember=Boolean(localStorage.getItem(REMEMBER_KEY))}catch(_err){}
