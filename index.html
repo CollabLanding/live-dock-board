@@ -363,7 +363,10 @@
         <h2 id="batchTitle">Batch Update / Actualización en lote</h2>
         <p id="batchSubtitle">Selected docks / Puertas seleccionadas</p>
       </div>
-      <button id="closeBatch" class="close-btn" type="button" aria-label="Close">×</button>
+      <div class="modal-head-actions">
+        <button id="hideBatchDocks" class="hide-dock-header-btn" type="button" title="Hide selected docks">Hide</button>
+        <button id="closeBatch" class="close-btn" type="button" aria-label="Close">×</button>
+      </div>
     </header>
     <div class="modal-body">
       <div id="batchSelectedList" class="batch-selected-list"></div>
@@ -395,7 +398,6 @@
       </div>
 
       <div class="batch-actions">
-        <button id="hideBatchDocks" class="secondary batch-hide-btn" type="button">Hide Selected / Ocultar selección</button>
         <button id="cancelBatch" class="secondary" type="button">Cancel / Cancelar</button>
         <button id="applyBatchUpdate" class="primary" type="button">Update Selected / Actualizar selección</button>
       </div>
