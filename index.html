@@ -188,6 +188,7 @@
     html[data-theme="dark"] .move-completion-help{background:#111827;color:var(--muted);border-color:var(--border)}
     @media(max-width:620px){.completion-dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}}
   </style>
+<link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
 <body>
 <div id="app">
@@ -218,7 +219,7 @@
           <span class="theme-label dark-label">Dark</span>
         </label>
         <div class="sound-controls"><button id="soundToggle" class="secondary small sound-toggle" type="button" aria-pressed="true">🔊 Sound On</button><label class="sound-volume">Volume<select id="soundVolume" aria-label="Sound volume"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label></div>
-        <span id="userEmail" class="user-email"></span><button id="signOutBtn" class="secondary small">Sign out</button>
+        <span id="userEmail" class="user-email"></span><small id="dockRoleLabel"></small><button id="dockAccessTop" class="secondary small" type="button" hidden>User Access</button><button id="signOutBtn" class="secondary small">Sign out</button>
       </div>
     </header>
 
@@ -226,14 +227,14 @@
       <div class="board-main">
     <section id="summaryCards" class="summary-grid"></section>
 
-    <section class="panel">
+    <section class="panel dock-board-panel">
       <div class="section-heading"><div><h2>Building 100</h2><p>Docks 30 → 1</p></div></div>
       <div class="dock-scroll"><div id="b100" class="dock-row thirty"></div></div>
     </section>
 
     <div class="yard-label"><span></span><strong>PARKING / TRAILER YARD</strong><span></span></div>
 
-    <section class="panel">
+    <section class="panel dock-board-panel">
       <div class="section-heading"><div><h2>Building 200</h2><p>Parking-lot side · docks 31 → 54</p></div></div>
       <div class="dock-scroll"><div id="b200Parking" class="dock-row twenty-four"></div></div>
       <div class="building-body">BUILDING 200</div>
@@ -242,7 +243,7 @@
     </section>
 
     <div class="activity-chat-grid">
-      <section class="panel">
+      <section class="panel dock-history-panel">
         <div class="section-heading activity-heading">
           <div><h2>Recent Activity</h2><p id="historyRangeNote">Last 12 hours · scroll to the bottom for the previous 12 hours</p></div>
           <div class="activity-search-wrap">
@@ -288,7 +289,7 @@
       </div>
 
       <aside class="panel active-users-panel" aria-label="Active users">
-        <div class="active-users-heading"><h2>Active Users</h2><span id="activeUsersCount" class="active-count">0</span></div>
+        <div class="active-users-heading"><h2><span id="dockActiveTitle">Active Users</span><a id="dockAccessLink" href="#user-access" hidden>Active Users</a></h2><span id="activeUsersCount" class="active-count">0</span></div>
         <div id="activeUsersList" class="active-users-list"><div class="active-empty">Connecting…</div></div>
       </aside>
     </div>
@@ -426,6 +427,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="access-control.js?v=20261009-roles"></script>
 <script>
 (async()=>{
   try{
@@ -446,6 +448,8 @@
     const moveCompletionBackdrop=$("moveCompletionBackdrop"),moveCompletionSubtitle=$("moveCompletionSubtitle"),moveCompletionDockPicker=$("moveCompletionDockPicker"),moveCompletionMessage=$("moveCompletionMessage"),closeMoveCompletion=$("closeMoveCompletion");
 
     const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,chatChannel=null,presenceChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],chatMessages=[],doneExpiryTimer=null,moveFadeTimer=null,pendingMoveCompletion=null,moveCompletionBusy=false;
+    const access=window.createDockAccess(supabase,()=>currentUser);
+
     const batchSelectedDockIds=new Set();
     let batchStatusValue="",batchInstructionValue="",batchMoveBuilding=null,batchClearInstruction=false;
     let batchDragActive=false,batchDragMoved=false,batchDragStartId=null,suppressDockClickUntil=0;
@@ -737,7 +741,7 @@
       chatMessages=(data||[]).slice().reverse();
       renderChat();
     }
-    async function sendChatMessage(){
+    async function sendChatMessage(){if(!access.can("chat"))return;
       const message=chatInput.value.trim();
       if(!message||!currentUser)return;
       chatSend.disabled=true;chatInput.disabled=true;chatNote.textContent="Sending…";
@@ -746,7 +750,7 @@
       if(error){chatNote.textContent="Could not send: "+error.message;chatInput.focus();return}
       chatInput.value="";chatNote.textContent="";upsertChatMessage(data);chatInput.focus();
     }
-    async function clearChatHistory(){
+    async function clearChatHistory(){if(!access.can("clear_chat"))return;
       if(!currentUser||!clearChatHistoryBtn)return;
       if(!confirm("Clear the Team Chat history for everyone?"))return;
       clearChatHistoryBtn.disabled=true;
@@ -1038,7 +1042,7 @@
       batchMessage.textContent="";
     }
 
-    function openBatchModal(){
+    function openBatchModal(){if(!access.can("batch_updates"))return;
       const selected=[...batchSelectedDockIds].map(id=>docks.get(id)).filter(Boolean);
       if(selected.length<2){clearBatchSelection();return}
       selected.sort((a,b)=>a.building-b.building||a.side.localeCompare(b.side)||a.dock_number-b.dock_number);
@@ -1053,7 +1057,7 @@
       batchInstructionValue="";batchMoveBuilding=null;batchClearInstruction=false;batchMessage.textContent="";
       if(clearSelection)clearBatchSelection();
     }
-    async function applyBatchStatusUpdate(){
+    async function applyBatchStatusUpdate(){if(!access.can("batch_updates"))return;
       const ids=[...batchSelectedDockIds].filter(id=>docks.has(id));
       if(ids.length<2){batchMessage.style.color="#b91c1c";batchMessage.textContent="Select at least two docks.";return}
 
@@ -1150,7 +1154,7 @@
       renderEverything();
       await loadHistory();
     }
-    function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));renderSummary()}
+    function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));renderSummary();access.apply()}
     function activeInstructionType(d){
       if(d?.instruction_type)return d.instruction_type;
       return d?.move_instruction_at&&d?.move_to_building?"Move":null;
@@ -1171,7 +1175,7 @@
       if(at!=="Move")return true;
       return sameMove(aBuilding,aDock,bBuilding,bDock);
     }
-    async function setDocksCollapsed(dockIds,hidden){
+    async function setDocksCollapsed(dockIds,hidden){if(!access.can("hide_docks"))return false;
       const ids=[...new Set((dockIds||[]).filter(id=>docks.has(id)))];
       if(!ids.length)return false;
 
@@ -1390,7 +1394,7 @@
         currentMove.classList.add("hidden");clearMove.classList.add("hidden");
       }
     }
-    function openDock(id){
+    function openDock(id){if(!access.can("update_status")&&!access.can("request_moves")&&!access.can("hide_docks"))return;
       selectedDockId=id;selectedMoveBuilding=null;const d=docks.get(id);
       initialStatus=normalizedStatus(d.status);
       initialCustomStatusText=String(d.custom_status_text||"");
@@ -1730,7 +1734,7 @@
         const requestAssignment=isInstructionAssignment(h);
         const requestType=historyInstructionType(h,"new");
         const sealCheck=requestAssignment&&requestType==="Seal Check";
-        const actionable=requestAssignment&&!sealCheck;
+        const actionable=requestAssignment&&!sealCheck&&access.can("respond_moves");
         const meta=ACTIVITY_META[h.activity_status],expanded=String(expandedActivityId??"")===String(h.id);
         const badge=meta?`<span class="activity-response ${meta.badge}">${safe(h.activity_status)}</span>`:"";
         const controls=actionable?`<div class="activity-controls ${expanded?"":"hidden"}" data-controls-for="${h.id}">
@@ -1894,223 +1898,24 @@
     }
 
     async function completeMoveFromPicker(destination){
-      if(moveCompletionBusy||!pendingMoveCompletion)return;
-      const {historyId,activity}=pendingMoveCompletion;
-      const destinationBuilding=Number(activity?.new_move_to_building);
-      const destinationDock=Number(destination?.dock_number);
-      if(!Number.isFinite(destinationBuilding)||!Number.isFinite(destinationDock)){
-        moveCompletionMessage.style.color="#b91c1c";
-        moveCompletionMessage.textContent="Invalid destination dock.";
-        return;
-      }
-
-      moveCompletionBusy=true;
-      moveCompletionMessage.style.color="";
-      moveCompletionMessage.textContent="Completing move… / Completando movimiento…";
-      moveCompletionDockPicker.querySelectorAll("button").forEach(button=>{button.disabled=true});
-
-      let sourceUpdated=false;
-      let historyUpdated=false;
-
+      if(!access.can("respond_moves")||moveCompletionBusy||!pendingMoveCompletion)return;
+      const {historyId}=pendingMoveCompletion;moveCompletionBusy=true;moveCompletionMessage.textContent="Completing move…";
       try{
-        const {data:freshActivity,error:activityError}=await supabase.from("dock_history")
-          .select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status")
-          .eq("id",historyId)
-          .maybeSingle();
-        if(activityError)throw activityError;
-        if(!freshActivity)throw new Error("Move request was not found.");
-        if(freshActivity.activity_status)throw new Error("This move has already been completed.");
-        if(String(freshActivity.new_instruction_type||"Move")!=="Move")throw new Error("This request is no longer a Move.");
-        if(Number(freshActivity.new_move_to_building)!==destinationBuilding)throw new Error("The destination building has changed.");
-
-        const {data:destRow,error:destError}=await supabase.from("docks")
-          .select("*")
-          .eq("id",destination.id)
-          .maybeSingle();
-        if(destError)throw destError;
-        if(!destRow)throw new Error("Destination dock was not found.");
-        if(Number(destRow.building)!==destinationBuilding||Number(destRow.dock_number)!==destinationDock)throw new Error("Destination dock is no longer valid.");
-        if(normalizedStatus(destRow.status)!=="Open Dock")throw new Error("That dock is no longer open.");
-
-        const sourceId=freshActivity.dock_id;
-        const {data:sourceRow,error:sourceReadError}=await supabase.from("docks")
-          .select("*")
-          .eq("id",sourceId)
-          .maybeSingle();
-        if(sourceReadError)throw sourceReadError;
-        if(!sourceRow)throw new Error("Source dock was not found.");
-        if(String(sourceRow.id)===String(destRow.id))throw new Error("Source and destination cannot be the same dock.");
-        if(String(activeInstructionType(sourceRow)||"")!=="Move"||
-           Number(sourceRow.move_to_building)!==destinationBuilding||
-           sourceRow.move_to_dock_number!=null){
-          throw new Error("This move is no longer a general Move request.");
-        }
-
-        const sourceUpdate=await supabase.from("docks").update({
-          move_to_dock_number:destinationDock,
-          updated_by:currentUser.id,
-          updated_by_email:currentUser.email
-        }).eq("id",sourceId)
-          .eq("move_to_building",destinationBuilding)
-          .is("move_to_dock_number",null)
-          .eq("instruction_type","Move")
-          .select("*")
-          .maybeSingle();
-        if(sourceUpdate.error)throw sourceUpdate.error;
-        if(!sourceUpdate.data)throw new Error("The move request changed before the dock was selected.");
-        sourceUpdated=true;
-
-        const historyUpdate=await supabase.from("dock_history").update({
-          new_move_to_dock_number:destinationDock
-        }).eq("id",historyId)
-          .eq("new_move_to_building",destinationBuilding)
-          .is("new_move_to_dock_number",null)
-          .eq("new_instruction_type","Move")
-          .is("activity_status",null)
-          .select("*")
-          .maybeSingle();
-        if(historyUpdate.error)throw historyUpdate.error;
-        if(!historyUpdate.data)throw new Error("The move history changed before it could be completed.");
-        historyUpdated=true;
-
-        const updatedActivity={...freshActivity,new_move_to_dock_number:destinationDock};
-        let {error:completeError}=await supabase.rpc("complete_move_activity",{p_history_id:historyId});
-        if(completeError&&isHistoryIdTypeMismatch(completeError)){
-          ({error:completeError}=await completeMoveFallback(historyId,updatedActivity));
-        }
-        if(completeError)throw completeError;
-
-        const localSource=docks.get(sourceId);
-        if(localSource){
-          localSource.move_to_dock_number=destinationDock;
-          localSource.updated_by=currentUser.id;
-          localSource.updated_by_email=currentUser.email;
-        }
-
-        activityStatusCache.set(historyId,"Done");
-        pendingLocalActivitySounds.delete(`${historyId}|Done`);
-        playSound("done");
-        expandedActivityId=historyId;
-        moveCompletionBusy=false;
-        closeMoveCompletionPicker(true);
+        const {error}=await supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:"Done",p_destination_dock_id:destination.id});if(error)throw error;
+        activityStatusCache.set(historyId,"Done");pendingLocalActivitySounds.delete(historyId+"|Done");playSound("done");expandedActivityId=historyId;moveCompletionBusy=false;closeMoveCompletionPicker(true);
         await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
-      }catch(error){
-        if(historyUpdated){
-          await supabase.from("dock_history").update({new_move_to_dock_number:null}).eq("id",historyId).eq("new_move_to_dock_number",destinationDock);
-        }
-        if(sourceUpdated){
-          await supabase.from("docks").update({
-            move_to_dock_number:null,
-            updated_by:currentUser.id,
-            updated_by_email:currentUser.email
-          }).eq("id",activity.dock_id).eq("move_to_dock_number",destinationDock);
-        }
-        moveCompletionBusy=false;
-        moveCompletionDockPicker.querySelectorAll("button").forEach(button=>{
-          button.disabled=button.classList.contains("occupied")||button.classList.contains("source");
-        });
-        moveCompletionMessage.style.color="#b91c1c";
-        moveCompletionMessage.textContent=error?.message||"Could not complete move.";
-      }
+      }catch(error){moveCompletionBusy=false;moveCompletionMessage.style.color="#b91c1c";moveCompletionMessage.textContent=error.message||"Could not complete move."}
     }
-
     async function setActivityStatus(historyId,status){
-      if(!ACTIVITY_META[status])return;
-      const soundKey=`${historyId}|${status}`;
-      pendingLocalActivitySounds.add(soundKey);
-      let activity=null;
-      const {data:activityData,error:activityReadError}=await supabase.from("dock_history")
-        .select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status")
-        .eq("id",historyId).single();
-      if(activityReadError){pendingLocalActivitySounds.delete(soundKey);alert("Could not read move activity: "+activityReadError.message);return}
-      activity=activityData;
-
-      if(status==="Done"&&String(activity.new_instruction_type||"Move")==="Move"&&activity.new_move_to_building!=null&&activity.new_move_to_dock_number==null&&activity.activity_status==null){
-        pendingLocalActivitySounds.delete(soundKey);
-        openMoveCompletionPicker(historyId,activity);
-        return;
-      }
-
-      // Prefer the atomic server-side completion routine. Older database
-      // installs defined p_history_id as bigint even though dock_history.id is
-      // UUID. For that specific mismatch, complete the same workflow directly.
-      if(status==="Done"){
-        let {error:completeError}=await supabase.rpc("complete_move_activity",{p_history_id:historyId});
-        if(completeError&&isHistoryIdTypeMismatch(completeError)){
-          ({error:completeError}=await completeMoveFallback(historyId,activity));
-        }
-        if(completeError){
-          pendingLocalActivitySounds.delete(soundKey);
-          alert("Could not complete move: "+completeError.message);
-          return;
-        }
-        activityStatusCache.set(historyId,"Done");
-        pendingLocalActivitySounds.delete(soundKey);
-        playSound("done");
-        expandedActivityId=historyId;
+      if(!access.can("respond_moves")||!ACTIVITY_META[status])return;
+      const soundKey=historyId+"|"+status;pendingLocalActivitySounds.add(soundKey);
+      try{
+        const {data:activity,error:readError}=await supabase.from("dock_history").select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status").eq("id",historyId).single();if(readError)throw readError;
+        if(status==="Done"&&String(activity.new_instruction_type||"Move")==="Move"&&activity.new_move_to_building!=null&&activity.new_move_to_dock_number==null&&activity.activity_status!=="Done"){pendingLocalActivitySounds.delete(soundKey);openMoveCompletionPicker(historyId,activity);return}
+        const {error}=await supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:status});if(error)throw error;
+        activityStatusCache.set(historyId,status);pendingLocalActivitySounds.delete(soundKey);const sound=activitySoundKind(status);if(sound)playSound(sound);expandedActivityId=historyId;
         await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
-        return;
-      }
-
-      const now=new Date().toISOString();
-      let {error}=await supabase.from("dock_history").update({
-        activity_status:status,
-        activity_status_changed_at:now,
-        activity_status_changed_by:currentUser.id,
-        activity_status_changed_by_email:currentUser.email,
-        activity_last_at:now
-      }).eq("id",historyId);
-      // Backward-compatible fallback if the v2.3 migration has not been run yet.
-      if(error && String(error.message||"").includes("activity_last_at")){
-        ({error}=await supabase.from("dock_history").update({
-          activity_status:status,
-          activity_status_changed_at:now,
-          activity_status_changed_by:currentUser.id,
-          activity_status_changed_by_email:currentUser.email
-        }).eq("id",historyId));
-      }
-      if(error){pendingLocalActivitySounds.delete(soundKey);alert("Could not update activity: "+error.message);return}
-      activityStatusCache.set(historyId,status);
-      pendingLocalActivitySounds.delete(soundKey);
-      const localActivitySound=activitySoundKind(status);if(localActivitySound)playSound(localActivitySound);
-
-      // Pause the green-to-red move timer while a driver has the assignment "On It".
-      // If the driver later switches to Need Clarification, resume from the exact point where it paused.
-      if(activity?.dock_id&&status!=="Done"){
-        const current=docks.get(activity.dock_id);
-        const activityType=activity.new_instruction_type||(activity.new_move_to_building?"Move":null);
-        const currentType=current?activeInstructionType(current):null;
-        const sameCurrentMove=current&&activityType&&sameInstruction(
-          currentType,current.move_to_building,current.move_to_dock_number,
-          activityType,activity.new_move_to_building,activity.new_move_to_dock_number
-        );
-        if(sameCurrentMove){
-          if(status==="On It"&&!current.move_timer_paused_at){
-            const {data:pausedDock,error:pauseError}=await supabase.from("docks").update({
-              move_timer_paused_at:now,
-              updated_by:currentUser.id,
-              updated_by_email:currentUser.email
-            }).eq("id",activity.dock_id).select("*").maybeSingle();
-            if(pauseError)alert("Marked On It, but the move timer could not be paused: "+pauseError.message);
-            else if(pausedDock){pausedDock.status=normalizedStatus(pausedDock.status);docks.set(pausedDock.id,pausedDock);renderEverything()}
-          }else if(status!=="On It"&&current.move_timer_paused_at){
-            const pausedAt=Date.parse(current.move_timer_paused_at);
-            const addedMs=Number.isFinite(pausedAt)?Math.max(0,Date.now()-pausedAt):0;
-            const totalPaused=Math.max(0,Number(current.move_timer_paused_ms)||0)+addedMs;
-            const {data:resumedDock,error:resumeError}=await supabase.from("docks").update({
-              move_timer_paused_at:null,
-              move_timer_paused_ms:Math.round(totalPaused),
-              updated_by:currentUser.id,
-              updated_by_email:currentUser.email
-            }).eq("id",activity.dock_id).select("*").maybeSingle();
-            if(resumeError)alert("Activity updated, but the move timer could not be resumed: "+resumeError.message);
-            else if(resumedDock){resumedDock.status=normalizedStatus(resumedDock.status);docks.set(resumedDock.id,resumedDock);renderEverything()}
-          }
-        }
-      }
-
-      expandedActivityId=historyId;
-      await Promise.all([loadHistory(),loadActivityIndicators()]);
+      }catch(error){pendingLocalActivitySounds.delete(soundKey);alert("Could not update activity: "+error.message)}
     }
     historyList.addEventListener("click",e=>{
       const statusBtn=e.target.closest("[data-activity-status]");
@@ -2183,7 +1988,7 @@
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.textContent=user.email||"";showBoard();setConnection("Connecting…");try{await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
@@ -2364,3 +2169,4 @@
 </script>
 </body>
 </html>
+
