@@ -202,6 +202,15 @@
     .active-trailers-list li[draggable="true"]{cursor:grab}
     .active-trailers-list li.trailer-selected{outline:1px solid var(--accent)}
     .active-trailer-number{flex:1;min-width:0}
+
+    .activity-chat-grid{grid-template-columns:fit-content(60%) minmax(0,1fr)}
+    .dock-history-panel .activity-heading{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:3px}
+    .activity-title-row{display:flex;align-items:center;justify-content:flex-start;gap:12px;flex-wrap:wrap}
+    .activity-title-row h2{white-space:nowrap}
+    .activity-title-row .activity-search-wrap{width:auto}
+    .activity-title-row .activity-search{width:160px;max-width:100%;min-height:32px;padding:5px 8px}
+    .activity-search-count:empty{display:none}
+    @media(max-width:900px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:fit-content;max-width:100%}}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -265,11 +274,14 @@
     <div class="activity-chat-grid">
       <section class="panel dock-history-panel">
         <div class="section-heading activity-heading">
-          <div><h2>Recent Activity</h2><p id="historyRangeNote">Last 12 hours · scroll to the bottom for the previous 12 hours</p></div>
-          <div class="activity-search-wrap">
-            <input id="activitySearch" class="activity-search" type="search" placeholder="Search activity…" autocomplete="off" aria-label="Search recent activity">
-            <span id="activitySearchCount" class="activity-search-count"></span>
+          <div class="activity-title-row">
+            <h2>Recent Activity</h2>
+            <div class="activity-search-wrap">
+              <input id="activitySearch" class="activity-search" type="search" placeholder="Search activity…" autocomplete="off" aria-label="Search recent activity">
+              <span id="activitySearchCount" class="activity-search-count"></span>
+            </div>
           </div>
+          <p id="historyRangeNote">Last 12 hours · scroll to the bottom for the previous 12 hours</p>
         </div>
         <div id="historyList" class="activity-list"></div>
       </section>
