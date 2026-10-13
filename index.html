@@ -245,6 +245,11 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     .trailer-picker th{color:var(--muted);white-space:nowrap}
     .trailer-picker .trailer-picker-notes{white-space:pre-wrap;overflow-wrap:anywhere;max-width:240px}
     .trailer-picker .trailer-picker-number{font-weight:800;white-space:nowrap}
+
+    .dock-cell{height:auto;display:flex;flex-direction:column}
+    .dock-cell>.dock-button,.dock-hidden-bar{flex:0 0 86px}
+    .dock-static-note{height:var(--dock-note-height,auto);min-height:24px;flex:none;margin-bottom:5px;font-size:9px;font-weight:800;line-height:1.2;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text)}
+    .seal-done-btn{top:calc(var(--dock-note-height,24px) + 10px)}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -1496,8 +1501,16 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       cell.appendChild(target);
     }
 
+    function appendDockNote(cell,d){
+      const note=document.createElement("div"),text=String(d.notes||"").trim();
+      note.className="dock-static-note";
+      note.textContent=d.is_hidden?"":text;
+      note.title=text;
+      if(text)note.setAttribute("aria-label",`Dock ${d.dock_number} note: ${text}`);
+      cell.appendChild(note);
+    }
     function renderRow(id,items){
-      const c=$(id);c.innerHTML="";items.forEach(d=>{
+      const c=$(id);c.style.removeProperty("--dock-note-height");c.innerHTML="";items.forEach(d=>{
         if(d.is_hidden){
           const cell=document.createElement("div");
           cell.className="dock-cell hidden-dock-cell";
@@ -1514,6 +1527,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
             setDockCollapsed(d.id,false);
           });
 
+          appendDockNote(cell,d);
           cell.appendChild(bar);
           appendTrailerTarget(cell,d);
           c.appendChild(cell);
@@ -1564,6 +1578,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
         const cell=document.createElement("div");
         cell.className="dock-cell";
+        appendDockNote(cell,d);
         cell.appendChild(b);
         appendTrailerTarget(cell,d);
 
@@ -1583,7 +1598,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         }
 
         c.appendChild(cell);
-      })
+      });
+      const noteHeight=Math.max(24,...[...c.querySelectorAll(".dock-static-note")].map(note=>note.scrollHeight));
+      c.style.setProperty("--dock-note-height",noteHeight+"px");
     }
     function renderSummary(){
       const vals=[...docks.values()],count=s=>vals.filter(d=>normalizedStatus(d.status)===s).length,moves=vals.filter(d=>activeInstructionType(d)&&d.move_instruction_at).length;
