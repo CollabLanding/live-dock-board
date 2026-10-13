@@ -506,9 +506,10 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
   <div class="trailer-picker-heading"><h2 id="trailerPickerTitle">Assign Trailer</h2><button id="closeTrailerPicker" type="button" aria-label="Close trailer table">×</button></div>
   <input id="trailerPickerSearch" type="search" placeholder="Search trailers or notes…" aria-label="Search trailers">
   <p id="trailerPickerMessage" class="trailer-picker-message" role="status"></p>
-  <div class="trailer-picker-scroll"><table><thead><tr><th>Trailer</th><th>Group</th><th>Storage Label</th><th>Current Dock</th><th>Notes</th><th></th></tr></thead><tbody id="trailerPickerRows"></tbody></table></div>
+  <div class="trailer-picker-scroll"><table><thead><tr><th data-sort="number">Trailer</th><th data-sort="category">Group</th><th data-sort="location_label">Storage Label</th><th data-sort="dock">Current Dock</th><th data-sort="notes">Notes</th><th></th></tr></thead><tbody id="trailerPickerRows"></tbody></table></div>
 </dialog>
 
+<script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="access-control.js?v=20261013-active-trailers"></script>
 <script>
@@ -1431,11 +1432,12 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
     const trailerPicker=$("trailerPicker"),trailerPickerRows=$("trailerPickerRows"),trailerPickerSearch=$("trailerPickerSearch"),trailerPickerMessage=$("trailerPickerMessage");
     let trailerPickerDockId=null,trailerPickerSaving=false;
+    const trailerPickerSort=window.createTableSort($("trailerPickerRows").closest("table"),(t,key)=>{if(key==="dock"){const d=[...docks.values()].find(d=>d.trailer_number===t.number);return d?[d.building,d.dock_number]:null}return t[key]},()=>renderTrailerPicker(),"number");
     function renderTrailerPicker(){
       if(!trailerPicker.open)return;
       const term=trailerPickerSearch.value.trim().toLowerCase();
       const rows=trailerCatalog.filter(t=>[t.number,t.category,t.location_label,t.notes].join(" ").toLowerCase().includes(term));
-      trailerPickerRows.innerHTML=rows.length?rows.map(t=>{
+      trailerPickerRows.innerHTML=rows.length?trailerPickerSort.sort(rows).map(t=>{
         const dock=[...docks.values()].find(d=>d.trailer_number===t.number),here=dock?.id===trailerPickerDockId;
         return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dock.dock_number}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
       }).join(""):'<tr><td colspan="6">No trailers found.</td></tr>';
