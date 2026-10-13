@@ -189,6 +189,19 @@
     @media(max-width:620px){.completion-dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}}
       .board-sidebar{position:static;display:grid;grid-template-rows:auto minmax(0,1fr) minmax(0,420px);gap:16px;min-width:0;height:var(--sidebar-page-height,auto)}.board-sidebar .active-users-panel{position:static;margin-bottom:0}.active-trailers-panel{display:flex;flex-direction:column;min-height:0;margin-bottom:0}.active-trailers-panel .active-users-heading{flex:0 0 auto}.active-trailers-list{list-style:none;padding:0 16px 0 0;margin:0 -16px 0 0;display:grid;align-content:start;gap:6px;min-height:0;flex:1;overflow-y:auto}.active-trailers-list li{padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--text)}.active-trailers-list li:has(.active-trailer-location){display:flex;align-items:center;justify-content:space-between;gap:3px}.active-trailer-location{display:flex;flex-direction:column;flex:0 0 auto;margin:0;font-size:9px;line-height:.9;font-weight:500;color:var(--muted);text-align:right}@media(max-width:1250px){.board-sidebar{position:static;height:auto;grid-template-rows:auto auto auto}.active-trailers-list{max-height:420px;flex:auto}}
 @media(max-width:720px){.active-trailers-list{margin-right:-13px;padding-right:13px}}
+
+    .dock-cell{height:116px}
+    .dock-trailer-target{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;width:100%;height:28px;min-height:0;padding:5px 0 0;border:0;border-radius:0;background:transparent;color:var(--text);position:relative;z-index:2}
+    .dock-trailer-dot,.trailer-assignment-dot{display:inline-block;width:2px;height:2px;min-width:2px;min-height:2px;flex:0 0 2px;background:#facc15}
+    .dock-trailer-dot{background:var(--muted)}
+    .dock-trailer-target.assigned .dock-trailer-dot,.trailer-assignment-dot.assigned{background:#22c55e}
+    .dock-trailer-target.drag-over{background:rgba(34,197,94,.16);outline:1px solid #22c55e;border-radius:3px}
+    .dock-trailer-number{font-size:8px;font-weight:700;line-height:1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    .hidden-dock-cell .dock-trailer-number{display:none}
+    .active-trailers-list li{display:flex;align-items:center;gap:5px}
+    .active-trailers-list li[draggable="true"]{cursor:grab}
+    .active-trailers-list li.trailer-selected{outline:1px solid var(--accent)}
+    .active-trailer-number{flex:1;min-width:0}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -1165,7 +1178,7 @@
       renderEverything();
       await loadHistory();
     }
-    function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));renderSummary();access.apply()}
+    function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));renderSummary();renderTrailerLists();access.apply()}
     function activeInstructionType(d){
       if(d?.instruction_type)return d.instruction_type;
       return d?.move_instruction_at&&d?.move_to_building?"Move":null;
@@ -1258,6 +1271,77 @@
       setTimeout(()=>pendingSealCompletionDockIds.delete(dockId),2000);
       await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
     }
+
+    let selectedTrailerNumber=null;
+    function initializeTrailerLists(){
+      document.querySelectorAll(".active-trailers-list li").forEach(item=>{
+        if(item.dataset.trailerNumber)return;
+        const first=item.firstElementChild;
+        const number=(first&&first.tagName==="SPAN"?first.textContent:item.firstChild.textContent).trim();
+        item.dataset.trailerNumber=number;
+        if(!first){const label=document.createElement("span");label.textContent=number;item.textContent="";item.appendChild(label)}
+        item.firstElementChild.classList.add("active-trailer-number");
+        const dot=document.createElement("i");dot.className="trailer-assignment-dot";dot.setAttribute("aria-hidden","true");item.prepend(dot);
+        item.tabIndex=0;
+        const select=()=>{if(!access.can("update_status"))return;selectedTrailerNumber=selectedTrailerNumber===number?null:number;renderTrailerLists()};
+        item.addEventListener("click",select);
+        item.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select()}});
+        item.addEventListener("dragstart",e=>{
+          if(!access.can("update_status")){e.preventDefault();return}
+          selectedTrailerNumber=number;
+          e.dataTransfer.setData("application/x-dock-trailer",number);
+          e.dataTransfer.setData("text/plain",number);
+          e.dataTransfer.effectAllowed="move";
+          item.classList.add("trailer-selected");
+        });
+        item.addEventListener("dragend",()=>{selectedTrailerNumber=null;document.querySelectorAll(".dock-trailer-target.drag-over").forEach(el=>el.classList.remove("drag-over"));renderTrailerLists()});
+      });
+    }
+    function renderTrailerLists(){
+      initializeTrailerLists();
+      const locations=new Map([...docks.values()].filter(d=>d.trailer_number).map(d=>[String(d.trailer_number).trim().toUpperCase(),d]));
+      document.querySelectorAll(".active-trailers-list li").forEach(item=>{
+        const number=item.dataset.trailerNumber,dock=locations.get(number);
+        item.draggable=access.can("update_status");
+        item.classList.toggle("trailer-selected",selectedTrailerNumber===number);
+        item.querySelector(".trailer-assignment-dot").classList.toggle("assigned",Boolean(dock));
+        const location=dock?`Assigned to Building ${dock.building}, Dock ${dock.dock_number}`:"Not assigned to a dock";
+        item.title=`${number} — ${location}`;
+        item.setAttribute("aria-label",item.title);
+      });
+    }
+    async function assignTrailerToDock(dockId,number){
+      if(!access.can("update_status")||!number)return;
+      if(![...document.querySelectorAll(".active-trailers-list li")].some(item=>item.dataset.trailerNumber===number))return;
+      try{
+        const {error}=await supabase.rpc("assign_dock_trailer",{p_dock_id:dockId,p_trailer_number:number});
+        if(error)throw error;
+        selectedTrailerNumber=null;
+        await loadDocks();
+      }catch(err){alert("Could not assign trailer: "+err.message)}
+    }
+    function appendTrailerTarget(cell,d){
+      const target=document.createElement("button"),number=String(d.trailer_number||"").trim();
+      target.type="button";target.className="dock-trailer-target"+(number?" assigned":"");
+      target.dataset.dockId=String(d.id);
+      target.title=number?`${number} — Building ${d.building}, Dock ${d.dock_number}`:`Drop a trailer here — Building ${d.building}, Dock ${d.dock_number}`;
+      target.setAttribute("aria-label",target.title);
+      target.innerHTML=`<i class="dock-trailer-dot" aria-hidden="true"></i>${number?`<span class="dock-trailer-number">${safe(number)}</span>`:""}`;
+      target.addEventListener("pointerdown",e=>e.stopPropagation());
+      target.addEventListener("click",e=>{e.stopPropagation();if(selectedTrailerNumber)assignTrailerToDock(d.id,selectedTrailerNumber)});
+      target.addEventListener("dragover",e=>{
+        if(!access.can("update_status")||!selectedTrailerNumber)return;
+        e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect="move";target.classList.add("drag-over");
+      });
+      target.addEventListener("dragleave",()=>target.classList.remove("drag-over"));
+      target.addEventListener("drop",e=>{
+        e.preventDefault();e.stopPropagation();target.classList.remove("drag-over");
+        const number=e.dataTransfer.getData("application/x-dock-trailer");
+        if(number)assignTrailerToDock(d.id,number);
+      });
+      cell.appendChild(target);
+    }
+
     function renderRow(id,items){
       const c=$(id);c.innerHTML="";items.forEach(d=>{
         if(d.is_hidden){
@@ -1277,6 +1361,7 @@
           });
 
           cell.appendChild(bar);
+          appendTrailerTarget(cell,d);
           c.appendChild(cell);
           return;
         }
@@ -1326,6 +1411,7 @@
         const cell=document.createElement("div");
         cell.className="dock-cell";
         cell.appendChild(b);
+        appendTrailerTarget(cell,d);
 
         if(requestType==="Seal Check"){
           const done=document.createElement("button");
@@ -1777,77 +1863,8 @@
     }
 
     async function completeMoveFallback(historyId,activity){
-      const sourceId=activity?.dock_id;
-      if(sourceId==null)return {error:new Error("Move activity is missing its source dock.")};
-
-      let source=docks.get(sourceId)||docks.get(Number(sourceId))||null;
-      if(!source){
-        const sourceResult=await supabase.from("docks").select("*").eq("id",sourceId).maybeSingle();
-        if(sourceResult.error)return {error:sourceResult.error};
-        source=sourceResult.data;
-      }
-      if(!source)return {error:new Error("Source dock could not be found.")};
-
-      const destinationBuilding=activity.new_move_to_building;
-      const destinationDock=activity.new_move_to_dock_number;
-
-      // Specific-dock moves transfer the trailer's current status to the
-      // destination before the source is opened.
-      if(destinationBuilding!=null&&destinationDock!=null){
-        const destinationResult=await supabase.from("docks")
-          .select("*")
-          .eq("building",destinationBuilding)
-          .eq("dock_number",destinationDock)
-          .maybeSingle();
-        if(destinationResult.error)return {error:destinationResult.error};
-        const destination=destinationResult.data;
-        if(!destination)return {error:new Error("Destination dock could not be found.")};
-        if(String(destination.id)===String(source.id))return {error:new Error("Source and destination docks cannot be the same.")};
-
-        const destinationPayload={
-          status:normalizedStatus(source.status),
-          custom_status_text:normalizedStatus(source.status)==="Custom"?(source.custom_status_text||null):null,
-          updated_by:currentUser.id,
-          updated_by_email:currentUser.email
-        };
-        const moved=await supabase.from("docks").update(destinationPayload).eq("id",destination.id);
-        if(moved.error)return {error:moved.error};
-      }
-
-      const opened=await supabase.from("docks").update({
-        status:"Open Dock",
-        custom_status_text:null,
-        instruction_type:null,
-        move_to_building:null,
-        move_to_dock_number:null,
-        move_instruction_at:null,
-        move_timer_paused_at:null,
-        move_timer_paused_ms:0,
-        updated_by:currentUser.id,
-        updated_by_email:currentUser.email
-      }).eq("id",source.id);
-      if(opened.error)return {error:opened.error};
-
-      const now=new Date().toISOString();
-      let activityUpdate=await supabase.from("dock_history").update({
-        activity_status:"Done",
-        activity_status_changed_at:now,
-        activity_status_changed_by:currentUser.id,
-        activity_status_changed_by_email:currentUser.email,
-        activity_last_at:now
-      }).eq("id",historyId);
-
-      if(activityUpdate.error&&String(activityUpdate.error.message||"").includes("activity_last_at")){
-        activityUpdate=await supabase.from("dock_history").update({
-          activity_status:"Done",
-          activity_status_changed_at:now,
-          activity_status_changed_by:currentUser.id,
-          activity_status_changed_by_email:currentUser.email
-        }).eq("id",historyId);
-      }
-      return activityUpdate.error?{error:activityUpdate.error}:{error:null};
+      return supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:"Done"});
     }
-
     function closeMoveCompletionPicker(force=false){
       if(moveCompletionBusy&&!force)return;
       moveCompletionBackdrop.classList.add("hidden");
