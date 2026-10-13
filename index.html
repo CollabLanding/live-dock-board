@@ -222,19 +222,15 @@
     @media(max-width:720px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:100%}}
     .trailers-page-link{color:var(--accent);font-weight:850;text-decoration:none}.trailers-page-link:hover{text-decoration:underline}
 
-    .yard-nav-primary{display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--muted);padding-bottom:4px}
-    .topbar .yard-nav-primary h1{font-size:26px;line-height:1.1}
-    .yard-nav-primary a{color:var(--text);font-size:26px;font-weight:900;line-height:1.1;text-decoration:none}
-    .yard-nav-primary a:hover{color:var(--accent)}
-    .yard-nav-secondary{display:block;margin-top:4px;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--muted)}
-    @media(max-width:560px){.topbar .yard-nav-primary h1,.yard-nav-primary a{font-size:22px}.yard-nav-primary{gap:16px}}
-
-    .yard-nav-primary{border-bottom:0;padding-bottom:0}
-    .yard-nav-primary a{color:#64748b;border-bottom:1px solid transparent;padding-bottom:4px}
-    .yard-nav-primary a[aria-current="page"]{color:#0f172a;border-bottom-color:#60a5fa}
-    .yard-nav-primary a:hover{color:#64748b}
-    html[data-theme="dark"] .yard-nav-primary a{color:#b5bfcc}
-    html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
+    .yard-nav-primary{display:flex;align-items:flex-start;gap:22px;margin:0;padding:0;border:0}
+.yard-nav-primary h1{display:flex;margin:0;padding:0;font:inherit}
+.yard-nav-primary a{display:block;margin:0;padding:0 0 4px;border-bottom:1px solid transparent;color:#64748b;font-size:26px;font-weight:900;line-height:1.1;text-decoration:none;white-space:nowrap}
+.yard-nav-primary a[aria-current="page"]{color:#0f172a;border-bottom-color:#60a5fa}
+.yard-nav-primary a:hover{color:#64748b;text-decoration:none}
+html[data-theme="dark"] .yard-nav-primary a{color:#b5bfcc}
+html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
+.yard-nav-secondary{display:block;margin-top:4px;font-size:12px;font-weight:400;line-height:1.4;letter-spacing:1px;color:var(--muted)}
+@media(max-width:560px){.yard-nav-primary a{font-size:22px}.yard-nav-primary{gap:16px}}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
