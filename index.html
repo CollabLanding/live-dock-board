@@ -231,6 +231,20 @@ html[data-theme="dark"] .yard-nav-primary a{color:#b5bfcc}
 html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 .yard-nav-secondary{display:block;margin-top:4px;font-size:12px;font-weight:400;line-height:1.4;letter-spacing:1px;color:var(--muted)}
 @media(max-width:560px){.yard-nav-primary a{font-size:22px}.yard-nav-primary{gap:16px}}
+
+    .trailer-picker{width:min(900px,calc(100vw - 24px));max-height:85vh;padding:20px;border:1px solid var(--border);border-radius:14px;background:var(--panel);color:var(--text)}
+    .trailer-picker::backdrop{background:rgba(15,23,42,.65)}
+    .trailer-picker-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .trailer-picker-heading h2{font-size:20px;margin:0}
+    .trailer-picker-heading button{border:0;background:transparent;color:var(--text);font-size:26px;padding:0 8px}
+    #trailerPickerSearch{width:100%;max-width:380px}
+    .trailer-picker-message{font-size:12px;color:var(--muted);min-height:18px;margin:8px 0}
+    .trailer-picker-scroll{max-height:60vh;overflow:auto}
+    .trailer-picker table{border-collapse:collapse;width:100%;font-size:12px}
+    .trailer-picker th,.trailer-picker td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    .trailer-picker th{color:var(--muted);white-space:nowrap}
+    .trailer-picker .trailer-picker-notes{white-space:pre-wrap;overflow-wrap:anywhere;max-width:240px}
+    .trailer-picker .trailer-picker-number{font-weight:800;white-space:nowrap}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -487,6 +501,13 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     </div>
   </section>
 </div>
+
+<dialog id="trailerPicker" class="trailer-picker" aria-labelledby="trailerPickerTitle">
+  <div class="trailer-picker-heading"><h2 id="trailerPickerTitle">Assign Trailer</h2><button id="closeTrailerPicker" type="button" aria-label="Close trailer table">×</button></div>
+  <input id="trailerPickerSearch" type="search" placeholder="Search trailers or notes…" aria-label="Search trailers">
+  <p id="trailerPickerMessage" class="trailer-picker-message" role="status"></p>
+  <div class="trailer-picker-scroll"><table><thead><tr><th>Trailer</th><th>Group</th><th>Storage Label</th><th>Current Dock</th><th>Notes</th><th></th></tr></thead><tbody id="trailerPickerRows"></tbody></table></div>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="access-control.js?v=20261013-active-trailers"></script>
@@ -1365,6 +1386,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         panel.querySelector(".active-trailers-list").innerHTML=items.map(t=>`<li data-trailer-notes="${safe(t.notes||"")}"><span>${safe(t.number)}</span>${t.location_label?`<small class="active-trailer-location">${t.location_label.split(/\s+/).map(part=>`<span>${safe(part)}</span>`).join("")}</small>`:""}</li>`).join("");
       }
       renderTrailerLists();
+      renderTrailerPicker();
     }
 
     function initializeTrailerLists(){
@@ -1406,25 +1428,58 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         item.setAttribute("aria-label",item.title);
       });
     }
-    async function assignTrailerToDock(dockId,number){
-      if(!access.can("update_status")||!number)return;
-      if(![...document.querySelectorAll(".active-trailers-list li")].some(item=>item.dataset.trailerNumber===number))return;
+
+    const trailerPicker=$("trailerPicker"),trailerPickerRows=$("trailerPickerRows"),trailerPickerSearch=$("trailerPickerSearch"),trailerPickerMessage=$("trailerPickerMessage");
+    let trailerPickerDockId=null,trailerPickerSaving=false;
+    function renderTrailerPicker(){
+      if(!trailerPicker.open)return;
+      const term=trailerPickerSearch.value.trim().toLowerCase();
+      const rows=trailerCatalog.filter(t=>[t.number,t.category,t.location_label,t.notes].join(" ").toLowerCase().includes(term));
+      trailerPickerRows.innerHTML=rows.length?rows.map(t=>{
+        const dock=[...docks.values()].find(d=>d.trailer_number===t.number),here=dock?.id===trailerPickerDockId;
+        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dock.dock_number}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
+      }).join(""):'<tr><td colspan="6">No trailers found.</td></tr>';
+    }
+    function openTrailerPicker(dockId){
+      if(!access.can("update_status"))return;
+      const dock=docks.get(dockId);if(!dock)return;
+      selectedTrailerNumber=null;renderTrailerLists();
+      trailerPickerDockId=dockId;trailerPickerSearch.value="";trailerPickerMessage.textContent="";
+      $("trailerPickerTitle").textContent=`Assign Trailer · Building ${dock.building} · Dock ${dock.dock_number}`;
+      trailerPicker.showModal();renderTrailerPicker();trailerPickerSearch.focus();
+    }
+    $("closeTrailerPicker").addEventListener("click",()=>{if(!trailerPickerSaving)trailerPicker.close()});
+    trailerPicker.addEventListener("cancel",e=>{if(trailerPickerSaving)e.preventDefault()});
+    trailerPicker.addEventListener("close",()=>{trailerPickerDockId=null});
+    trailerPickerSearch.addEventListener("input",renderTrailerPicker);
+    trailerPickerRows.addEventListener("click",async e=>{
+      const button=e.target.closest("[data-assign-trailer]");if(!button||trailerPickerSaving||!access.can("update_status"))return;
+      trailerPickerSaving=true;trailerPickerMessage.textContent="Assigning trailer…";renderTrailerPicker();
+      const ok=await assignTrailerToDock(trailerPickerDockId,button.dataset.assignTrailer,message=>trailerPickerMessage.textContent=message);
+      trailerPickerSaving=false;
+      if(ok)trailerPicker.close();else renderTrailerPicker();
+    });
+
+    async function assignTrailerToDock(dockId,number,onError=message=>alert(message)){
+      if(!access.can("update_status")||!number)return false;
+      if(!trailerCatalog.some(t=>t.number===number))return false;
       try{
         const {error}=await supabase.rpc("assign_dock_trailer",{p_dock_id:dockId,p_trailer_number:number});
         if(error)throw error;
         selectedTrailerNumber=null;
         await loadDocks();
-      }catch(err){alert("Could not assign trailer: "+err.message)}
+        return true;
+      }catch(err){onError("Could not assign trailer: "+err.message);return false}
     }
     function appendTrailerTarget(cell,d){
       const target=document.createElement("button"),number=String(d.trailer_number||"").trim();
       target.type="button";target.className="dock-trailer-target"+(number?" assigned":"");
       target.dataset.dockId=String(d.id);
-      target.title=number?`${number} — Building ${d.building}, Dock ${d.dock_number}`:`Drop a trailer here — Building ${d.building}, Dock ${d.dock_number}`;
+      target.title=number?`${number} — Building ${d.building}, Dock ${d.dock_number}`:`Click to assign or drop a trailer here — Building ${d.building}, Dock ${d.dock_number}`;
       target.setAttribute("aria-label",target.title);
       target.innerHTML=`<i class="dock-trailer-dot" aria-hidden="true"></i>${number?`<span class="dock-trailer-number">${safe(number)}</span>`:""}`;
       target.addEventListener("pointerdown",e=>e.stopPropagation());
-      target.addEventListener("click",e=>{e.stopPropagation();if(selectedTrailerNumber)assignTrailerToDock(d.id,selectedTrailerNumber)});
+      target.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openTrailerPicker(d.id)});
       target.addEventListener("dragover",e=>{
         if(!access.can("update_status")||!selectedTrailerNumber)return;
         e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect="move";target.classList.add("drag-over");
@@ -2086,6 +2141,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       }
       if(soundKind)playSound(soundKind);
       renderEverything();
+      renderTrailerPicker();
       if(selectedDockId===row.id&&payload.eventType!=="DELETE")openDock(row.id);
     }
     function handleHistoryRealtime(payload){
