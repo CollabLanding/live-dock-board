@@ -221,6 +221,13 @@
     @media(max-width:1100px){.activity-chat-grid{grid-template-columns:fit-content(60%) minmax(0,1fr)}.activity-chat-grid>.chat-panel{grid-column:1 / -1}}
     @media(max-width:720px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:100%}}
     .trailers-page-link{color:var(--accent);font-weight:850;text-decoration:none}.trailers-page-link:hover{text-decoration:underline}
+
+    .yard-nav-primary{display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--muted);padding-bottom:4px}
+    .topbar .yard-nav-primary h1{font-size:26px;line-height:1.1}
+    .yard-nav-primary a{color:var(--text);font-size:26px;font-weight:900;line-height:1.1;text-decoration:none}
+    .yard-nav-primary a:hover{color:var(--accent)}
+    .yard-nav-secondary{display:block;margin-top:4px;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--muted)}
+    @media(max-width:560px){.topbar .yard-nav-primary h1,.yard-nav-primary a{font-size:22px}.yard-nav-primary{gap:16px}}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -243,7 +250,7 @@
 
   <main id="boardScreen" class="hidden">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div><h1>Live Trailer Board</h1><p><a class="topbar-page-link" href="/Transfers/">Transfers</a> · <a id="dockTrailersLink" class="trailers-page-link" href="trailers.html" hidden>Trailers</a> · <strong>v4.2.3</strong></p></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" href="trailers.html" hidden>Trailers</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge">Connecting…</span>
         <label class="theme-switch" for="themeToggle">
