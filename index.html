@@ -228,6 +228,13 @@
     .yard-nav-primary a:hover{color:var(--accent)}
     .yard-nav-secondary{display:block;margin-top:4px;font-size:12px;font-weight:400;letter-spacing:1px;color:var(--muted)}
     @media(max-width:560px){.topbar .yard-nav-primary h1,.yard-nav-primary a{font-size:22px}.yard-nav-primary{gap:16px}}
+
+    .yard-nav-primary{border-bottom:0;padding-bottom:0}
+    .yard-nav-primary a{color:#64748b;border-bottom:1px solid transparent;padding-bottom:4px}
+    .yard-nav-primary a[aria-current="page"]{color:#0f172a;border-bottom-color:#60a5fa}
+    .yard-nav-primary a:hover{color:#64748b}
+    html[data-theme="dark"] .yard-nav-primary a{color:#b5bfcc}
+    html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
