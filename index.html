@@ -187,7 +187,8 @@
     .completion-dock-btn:disabled{cursor:not-allowed;filter:none}
     html[data-theme="dark"] .move-completion-help{background:#111827;color:var(--muted);border-color:var(--border)}
     @media(max-width:620px){.completion-dock-picker{grid-template-columns:repeat(5,minmax(44px,1fr))}}
-  </style>
+      .board-sidebar{position:sticky;top:18px;display:grid;gap:16px;min-width:0}.board-sidebar .active-users-panel{position:static;margin-bottom:0}.active-trailers-list{list-style:none;padding:0;margin:0;display:grid;gap:6px;max-height:420px;overflow-y:auto}.active-trailers-list li{padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--text)}@media(max-width:1250px){.board-sidebar{position:static}}
+</style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
 <body>
@@ -288,9 +289,12 @@
     </section>
       </div>
 
-      <aside class="panel active-users-panel" aria-label="Active users">
+      <aside class="board-sidebar">
+      <section class="panel active-users-panel" aria-label="Active users">
         <div class="active-users-heading"><h2><span id="dockActiveTitle">Active Users</span><a id="dockAccessLink" href="#user-access" hidden>Active Users</a></h2><span id="activeUsersCount" class="active-count">0</span></div>
         <div id="activeUsersList" class="active-users-list"><div class="active-empty">Connecting…</div></div>
+      </section>
+      <section class="panel active-trailers-panel" aria-labelledby="activeTrailersTitle"><div class="active-users-heading"><h2 id="activeTrailersTitle">Active Trailers</h2><span class="active-count">29</span></div><ul class="active-trailers-list"><li>U90770</li><li>W83691</li><li>W84935</li><li>W85767</li><li>H15643</li><li>W99595</li><li>W00514</li><li>W86005</li><li>W24822</li><li>W23496</li><li>W84716</li><li>H15257</li><li>H08819</li><li>W87588</li><li>U85250</li><li>W23867</li><li>W92475</li><li>W25727</li><li>U95524</li><li>U94421</li><li>H15819</li><li>H15761</li><li>W10657</li><li>H15817</li><li>W02111</li><li>Y10496</li><li>Y10505</li><li>Y10509</li><li>Y10512</li></ul></section>
       </aside>
     </div>
   </main>
@@ -427,7 +431,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="access-control.js?v=20261009-roles"></script>
+<script src="access-control.js?v=20261013-active-trailers"></script>
 <script>
 (async()=>{
   try{
