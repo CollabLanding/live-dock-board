@@ -222,7 +222,7 @@
     @media(max-width:720px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:100%}}
     .trailers-page-link{color:var(--accent);font-weight:850;text-decoration:none}.trailers-page-link:hover{text-decoration:underline}
 
-    .yard-nav-primary{display:flex;align-items:flex-start;gap:22px;margin:0;padding:0;border:0}
+    .yard-nav-primary{display:flex;flex-wrap:wrap;align-items:flex-start;gap:22px;margin:0;padding:0;border:0}
 .yard-nav-primary h1{display:flex;margin:0;padding:0;font:inherit}
 .yard-nav-primary a{display:block;margin:0;padding:0 0 4px;border-bottom:1px solid transparent;color:#64748b;font-size:26px;font-weight:900;line-height:1.1;text-decoration:none;white-space:nowrap}
 .yard-nav-primary a[aria-current="page"]{color:#0f172a;border-bottom-color:#60a5fa}
@@ -253,7 +253,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
   <main id="boardScreen" class="hidden">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" href="trailers.html" hidden>Trailers</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" href="trailers.html" hidden>Trailers</a><a id="dockDocksLink" href="docks.html" hidden>Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge">Connecting…</span>
         <label class="theme-switch" for="themeToggle">
@@ -1394,6 +1394,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function renderTrailerLists(){
       initializeTrailerLists();
       $("dockTrailersLink").hidden=!access.isAdmin();
+      $("dockDocksLink").hidden=!access.isAdmin();
       const locations=new Map([...docks.values()].filter(d=>d.trailer_number).map(d=>[String(d.trailer_number).trim().toUpperCase(),d]));
       document.querySelectorAll(".active-trailers-list li").forEach(item=>{
         const number=item.dataset.trailerNumber,dock=locations.get(number);
