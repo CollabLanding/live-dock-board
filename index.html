@@ -211,6 +211,15 @@
     .activity-title-row .activity-search{width:160px;max-width:100%;min-height:32px;padding:5px 8px}
     .activity-search-count:empty{display:none}
     @media(max-width:900px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:fit-content;max-width:100%}}
+
+    .activity-chat-grid{grid-template-columns:fit-content(40%) fit-content(30%) minmax(0,1fr)}
+    .trailer-history-panel .activity-item{font-size:13px}
+    .trailer-activity-action{font-weight:700}
+    .trailer-activity-action.attached{color:#16a34a}
+    .trailer-activity-action.released{color:#ca8a04}
+    .release-trailer-btn{width:100%;margin-top:8px;min-height:38px;font-size:13px}
+    @media(max-width:1100px){.activity-chat-grid{grid-template-columns:fit-content(60%) minmax(0,1fr)}.activity-chat-grid>.chat-panel{grid-column:1 / -1}}
+    @media(max-width:720px){.activity-chat-grid{grid-template-columns:minmax(0,1fr)}.dock-history-panel{width:100%}}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -284,6 +293,12 @@
           <p id="historyRangeNote">Last 12 hours · scroll to the bottom for the previous 12 hours</p>
         </div>
         <div id="historyList" class="activity-list"></div>
+      </section>
+
+
+      <section class="panel trailer-history-panel" aria-labelledby="trailerActivityTitle">
+        <div class="section-heading"><div><h2 id="trailerActivityTitle">Trailer Activity</h2><p>Attachments and releases</p></div></div>
+        <div id="trailerActivityList" class="activity-list" aria-live="polite"><div class="activity-empty">No trailer activity yet.</div></div>
       </section>
 
       <section class="panel chat-panel">
@@ -387,7 +402,7 @@
       </div>
 
 
-      <div class="modal-footer"><button id="applyUpdate" class="primary" type="button">Update / Actualizar</button></div>
+      <div class="modal-footer"><button id="applyUpdate" class="primary" type="button">Update / Actualizar</button><button id="releaseTrailer" class="secondary release-trailer-btn hidden" type="button">Release Trailer / Liberar remolque</button></div>
       <div id="modalMessage" class="modal-message" aria-live="polite"></div>
     </div>
   </section>
@@ -483,6 +498,8 @@
     const batchBackdrop=$("batchBackdrop"),batchSubtitle=$("batchSubtitle"),batchSelectedList=$("batchSelectedList"),batchStatusOptionGrid=$("batchStatusOptionGrid"),batchCustomWrap=$("batchCustomWrap"),batchCustomText=$("batchCustomText"),batchInstructionTypeGrid=$("batchInstructionTypeGrid"),batchRequestMove=$("batchRequestMove"),batchRequestAdjust=$("batchRequestAdjust"),batchRequestSeal=$("batchRequestSeal"),batchMoveBuildingWrap=$("batchMoveBuildingWrap"),batchMove100=$("batchMove100"),batchMove200=$("batchMove200"),batchClearRequest=$("batchClearRequest"),hideBatchDocks=$("hideBatchDocks"),closeBatch=$("closeBatch"),cancelBatch=$("cancelBatch"),applyBatchUpdate=$("applyBatchUpdate"),batchMessage=$("batchMessage");
     const moveCompletionBackdrop=$("moveCompletionBackdrop"),moveCompletionSubtitle=$("moveCompletionSubtitle"),moveCompletionDockPicker=$("moveCompletionDockPicker"),moveCompletionMessage=$("moveCompletionMessage"),closeMoveCompletion=$("closeMoveCompletion");
 
+    const releaseTrailerButton=$("releaseTrailer"),trailerActivityList=$("trailerActivityList");
+    let trailerActivityRows=[],trailerActivityChannel=null,trailerActivityTimer=null,trailerActivityLoading=false,trailerActivityHasMore=true,trailerActivityLoadVersion=0;
     const docks=new Map(),activityIndicators=new Map(),activityStatusCache=new Map(); let currentUser=null,selectedDockId=null,dockChannel=null,historyChannel=null,chatChannel=null,presenceChannel=null,selectedMoveBuilding=null,pendingMove=null,initialStatus=null,initialCustomStatusText="",expandedActivityId=null,activityIndicatorRows=[],chatMessages=[],doneExpiryTimer=null,moveFadeTimer=null,pendingMoveCompletion=null,moveCompletionBusy=false;
     const access=window.createDockAccess(supabase,()=>currentUser);
 
@@ -808,6 +825,46 @@
         clearChatHistoryBtn.disabled=false;
       }
     }
+
+
+    function renderTrailerActivity(){
+      trailerActivityList.innerHTML=trailerActivityRows.length?trailerActivityRows.map(row=>{
+        const who=row.changed_by_email||"Unknown user";
+        return `<div class="activity-item"><div><strong>${safe(row.trailer_number)}</strong> · <span class="trailer-activity-action ${row.action==="Attached"?"attached":"released"}">${safe(row.action)}</span></div><div>Building ${row.building} · Dock ${row.dock_number}</div><div class="time">${new Date(row.changed_at).toLocaleString()} · ${safe(who)}</div></div>`;
+      }).join(""):'<div class="activity-empty">No trailer activity yet.</div>';
+    }
+    async function loadTrailerActivity(reset=true){
+      if(!reset&&trailerActivityLoading)return;
+      const version=++trailerActivityLoadVersion;
+      trailerActivityLoading=true;
+      try{
+        let query=supabase.from("trailer_activity").select("id,building,dock_number,trailer_number,action,changed_at,changed_by_email").order("id",{ascending:false}).limit(100);
+        if(!reset&&trailerActivityRows.length)query=query.lt("id",trailerActivityRows[trailerActivityRows.length-1].id);
+        const {data,error}=await query;
+        if(error)throw error;
+        if(version!==trailerActivityLoadVersion)return;
+        trailerActivityRows=reset?(data||[]):trailerActivityRows.concat(data||[]);
+        trailerActivityHasMore=(data||[]).length===100;
+        renderTrailerActivity();
+      }catch(err){if(version===trailerActivityLoadVersion)trailerActivityList.innerHTML=`<div class="activity-empty">Could not load trailer activity: ${safe(err.message)}</div>`}
+      finally{if(version===trailerActivityLoadVersion)trailerActivityLoading=false}
+    }
+    async function releaseAttachedTrailer(){
+      const dock=docks.get(selectedDockId);
+      if(!dock?.trailer_number||!access.can("update_status"))return;
+      releaseTrailerButton.disabled=true;
+      try{
+        const {error}=await supabase.rpc("release_dock_trailer",{p_dock_id:dock.id,p_expected_trailer_number:dock.trailer_number});
+        if(error)throw error;
+        closeModal();
+        await Promise.all([loadDocks(),loadTrailerActivity()]);
+      }catch(err){modalMessage.textContent="Could not release trailer: "+err.message}
+      finally{releaseTrailerButton.disabled=false}
+    }
+    trailerActivityList.addEventListener("scroll",()=>{
+      if(trailerActivityHasMore&&!trailerActivityLoading&&trailerActivityList.scrollHeight-trailerActivityList.scrollTop-trailerActivityList.clientHeight<80)loadTrailerActivity(false);
+    });
+    releaseTrailerButton.addEventListener("click",releaseAttachedTrailer);
 
     async function loadDocks(){
       const {data,error}=await supabase.from("docks").select("*").order("building").order("side").order("dock_number");
@@ -1505,6 +1562,8 @@
     }
     function openDock(id){if(!access.can("update_status")&&!access.can("request_moves")&&!access.can("hide_docks"))return;
       selectedDockId=id;selectedMoveBuilding=null;const d=docks.get(id);
+      releaseTrailerButton.classList.toggle("hidden",!d.trailer_number||!access.can("update_status"));
+      releaseTrailerButton.textContent=`Release ${d.trailer_number||"Trailer"} / Liberar remolque`;
       initialStatus=normalizedStatus(d.status);
       initialCustomStatusText=String(d.custom_status_text||"");
       const currentInstructionType=activeInstructionType(d);
@@ -2023,12 +2082,14 @@
     }
     function subscribeRealtime(){
       if(dockChannel)supabase.removeChannel(dockChannel);if(historyChannel)supabase.removeChannel(historyChannel);if(chatChannel)supabase.removeChannel(chatChannel);
+      if(trailerActivityChannel)supabase.removeChannel(trailerActivityChannel);
+      trailerActivityChannel=supabase.channel("trailer-assignment-history-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"trailer_activity"},()=>{clearTimeout(trailerActivityTimer);trailerActivityTimer=setTimeout(()=>loadTrailerActivity(),100)}).subscribe();
       dockChannel=supabase.channel("trailer-board-live").on("postgres_changes",{event:"*",schema:"public",table:"docks"},handleDockRealtime).subscribe(status=>{if(status==="SUBSCRIBED")setConnection("Live","live");else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")setConnection("Connection issue","offline")});
       historyChannel=supabase.channel("trailer-history-live").on("postgres_changes",{event:"*",schema:"public",table:"dock_history"},handleHistoryRealtime).subscribe();
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
@@ -2106,8 +2167,8 @@
     signOutBtn.addEventListener("click",async()=>{
       clearSavedSessions();
       try{if(presenceChannel)await presenceChannel.untrack()}catch(_err){}
-      for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel]){if(channel)supabase.removeChannel(channel)}
-      dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;
+      for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel,trailerActivityChannel]){if(channel)supabase.removeChannel(channel)}
+      dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;trailerActivityChannel=null;clearTimeout(trailerActivityTimer);trailerActivityLoadVersion++;
       await supabase.auth.signOut();currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];chatMessages=[];warnedMoveKeys.clear();remindedMoveKeys.clear();pendingLocalActivitySounds.clear();pendingSealCompletionDockIds.clear();
       activeUsersCount.textContent="0";activeUsersList.innerHTML='<div class="active-empty">Not signed in</div>';renderChat();
       if(doneExpiryTimer)clearTimeout(doneExpiryTimer);if(moveFadeTimer)clearInterval(moveFadeTimer);moveFadeTimer=null;showLogin()
@@ -2193,7 +2254,7 @@
         let remember=false;try{remember=Boolean(localStorage.getItem(REMEMBER_KEY))}catch(_err){}
         saveSessionForDevice(session,remember);
       }
-      if(event==="SIGNED_OUT"){clearSavedSessions();for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel]){if(channel)supabase.removeChannel(channel)}dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;showLogin()}
+      if(event==="SIGNED_OUT"){clearSavedSessions();for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel,trailerActivityChannel]){if(channel)supabase.removeChannel(channel)}dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;trailerActivityChannel=null;clearTimeout(trailerActivityTimer);trailerActivityLoadVersion++;showLogin()}
     });
     loadThemePreference();
     loadSoundPreferences();
