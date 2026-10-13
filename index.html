@@ -250,7 +250,8 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </head>
 <body>
 <div id="app">
-  <section id="loginScreen" class="auth-shell">
+  <div id="authLoading" class="auth-shell" role="status"><p style="color:var(--muted)">Loading Yard View…</p></div>
+  <section id="loginScreen" class="auth-shell hidden">
     <div class="auth-card">
       <img class="company-logo login-company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="brand-mark">TB</div>
       <h1>Live Trailer Board</h1>
@@ -630,8 +631,8 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     const sideBilingual=side=>side==="Parking Lot"?"Parking Lot Side / Lado del estacionamiento":side==="Opposite Side"?"Opposite Side / Lado opuesto":`${side} / ${side}`;
     const userName=emailAddress=>String(emailAddress||"").split("@")[0]||"user";
     const setConnection=(text,mode="")=>{connectionBadge.textContent=text;connectionBadge.className="connection-badge"+(mode?` ${mode}`:"")};
-    const showLogin=()=>{loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
-    const showBoard=()=>{loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
+    const showLogin=()=>{$("authLoading").classList.add("hidden");loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
+    const showBoard=()=>{$("authLoading").classList.add("hidden");loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
 
     function applyTheme(theme,save=true){
       currentTheme=theme==="dark"?"dark":"light";
@@ -2176,7 +2177,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
@@ -2352,7 +2353,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(!error&&data.session?.user){saveSessionForDevice(data.session,saved.remember);await init(data.session.user)}
       else{clearSavedSessions();showLogin()}
     }else showLogin();
-  }catch(err){console.error(err);const m=document.getElementById("loginMessage");if(m){m.className="message error";m.textContent="Could not start the trailer board: "+(err?.message||err)}}
+  }catch(err){console.error(err);document.getElementById("authLoading")?.classList.add("hidden");document.getElementById("loginScreen")?.classList.remove("hidden");const m=document.getElementById("loginMessage");if(m){m.className="message error";m.textContent="Could not start the trailer board: "+(err?.message||err)}}
 })();
 </script>
 <script>
