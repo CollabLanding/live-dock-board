@@ -250,6 +250,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     .dock-cell>.dock-button,.dock-hidden-bar{flex:0 0 86px}
     .dock-static-note{height:var(--dock-note-height,auto);min-height:24px;flex:none;margin-bottom:0;font-size:13px;font-weight:800;line-height:1.1;text-align:center;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text);display:flex;align-items:flex-end;justify-content:center;width:100%}
     .seal-done-btn{top:calc(var(--dock-note-height,24px) + 5px)}
+    .trailer-picker-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.trailer-picker-tools #trailerPickerSearch{flex:1;min-width:160px}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 </head>
@@ -510,7 +511,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
 <dialog id="trailerPicker" class="trailer-picker" aria-labelledby="trailerPickerTitle">
   <div class="trailer-picker-heading"><h2 id="trailerPickerTitle">Assign Trailer</h2><button id="closeTrailerPicker" type="button" aria-label="Close trailer table">×</button></div>
-  <input id="trailerPickerSearch" type="search" placeholder="Search trailers or notes…" aria-label="Search trailers">
+  <div class="trailer-picker-tools"><input id="trailerPickerSearch" type="search" placeholder="Search trailers or notes…" aria-label="Search trailers"><button id="clearTrailerPicker" class="secondary" type="button">Clear</button></div>
   <p id="trailerPickerMessage" class="trailer-picker-message" role="status"></p>
   <div class="trailer-picker-scroll"><table><thead><tr><th data-sort="number">Trailer</th><th data-sort="category">Group</th><th data-sort="location_label">Storage Label</th><th data-sort="dock">Current Dock</th><th data-sort="notes">Notes</th><th></th></tr></thead><tbody id="trailerPickerRows"></tbody></table></div>
 </dialog>
@@ -1441,6 +1442,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     const trailerPickerSort=window.createTableSort($("trailerPickerRows").closest("table"),(t,key)=>{if(key==="dock"){const d=[...docks.values()].find(d=>d.trailer_number===t.number);return d?[d.building,d.dock_number]:null}return t[key]},()=>renderTrailerPicker(),"number");
     function renderTrailerPicker(){
       if(!trailerPicker.open)return;
+      $("clearTrailerPicker").disabled=trailerPickerSaving||!docks.get(trailerPickerDockId)?.trailer_number||!access.can("update_status");
       const term=trailerPickerSearch.value.trim().toLowerCase();
       const rows=trailerCatalog.filter(t=>[t.number,t.category,t.location_label,t.notes].join(" ").toLowerCase().includes(term));
       trailerPickerRows.innerHTML=rows.length?trailerPickerSort.sort(rows).map(t=>{
@@ -1456,6 +1458,19 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       $("trailerPickerTitle").textContent=`Assign Trailer · Building ${dock.building} · Dock ${dock.dock_number}`;
       trailerPicker.showModal();renderTrailerPicker();trailerPickerSearch.focus();
     }
+    $("clearTrailerPicker").addEventListener("click",async()=>{
+      const dock=docks.get(trailerPickerDockId);
+      if(trailerPickerSaving||!dock?.trailer_number||!access.can("update_status"))return;
+      trailerPickerSaving=true;trailerPickerMessage.textContent="Clearing trailer…";renderTrailerPicker();
+      try{
+        const {error}=await supabase.rpc("release_dock_trailer",{p_dock_id:dock.id,p_expected_trailer_number:dock.trailer_number});
+        if(error)throw error;
+        selectedTrailerNumber=null;
+        await Promise.all([loadDocks(),loadTrailerActivity()]);
+        trailerPicker.close();
+      }catch(err){trailerPickerMessage.textContent="Could not clear trailer: "+err.message}
+      finally{trailerPickerSaving=false;renderTrailerPicker()}
+    });
     $("closeTrailerPicker").addEventListener("click",()=>{if(!trailerPickerSaving)trailerPicker.close()});
     trailerPicker.addEventListener("cancel",e=>{if(trailerPickerSaving)e.preventDefault()});
     trailerPicker.addEventListener("close",()=>{trailerPickerDockId=null});
