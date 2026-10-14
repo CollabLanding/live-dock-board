@@ -520,6 +520,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
   <div class="trailer-picker-scroll"><table><thead><tr><th data-sort="number">Trailer</th><th data-sort="category">Group</th><th data-sort="location_label">Storage Label</th><th data-sort="dock">Current Dock</th><th data-sort="notes">Notes</th><th></th></tr></thead><tbody id="trailerPickerRows"></tbody></table></div>
 </dialog>
 
+<script src="chat-typing.js?v=20261014"></script>
 <script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="access-control.js?v=20261013-active-trailers"></script>
@@ -641,7 +642,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     const sideBilingual=side=>side==="Parking Lot"?"Parking Lot Side / Lado del estacionamiento":side==="Opposite Side"?"Opposite Side / Lado opuesto":`${side} / ${side}`;
     const userName=emailAddress=>String(emailAddress||"").split("@")[0]||"user";
     const setConnection=(text,mode="")=>{connectionBadge.textContent=text;connectionBadge.className="connection-badge"+(mode?` ${mode}`:"")};
-    const showLogin=()=>{$("authLoading").classList.add("hidden");loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
+    const showLogin=()=>{chatTyping.stop();$("authLoading").classList.add("hidden");loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
     const showBoard=()=>{$("authLoading").classList.add("hidden");loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
 
     function applyTheme(theme,save=true){
@@ -838,6 +839,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatMessages=(data||[]).slice().reverse();
       renderChat();
     }
+    const chatTyping=window.ChatTyping.create({client:supabase,input:chatInput,form:chatForm,anchor:chatNote,getUser:()=>currentUser,canChat:()=>access.can("chat"),name:()=>currentUser?.email?.split("@")[0]||"User",channelName:"yard-chat-typing"});
     async function sendChatMessage(){if(!access.can("chat"))return;
       const message=chatInput.value.trim();
       if(!message||!currentUser)return;
@@ -2219,7 +2221,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
@@ -2256,6 +2258,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const next=before+emoji+after;
       if(next.length>500)return;
       chatInput.value=next;
+      chatTyping.activity();
       const caret=start+emoji.length;
       chatInput.focus();
       chatInput.setSelectionRange(caret,caret);
