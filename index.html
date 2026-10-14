@@ -394,7 +394,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     </header>
     <div class="modal-body">
       <div class="action-choice">
-        <button id="statusToggle" type="button"><span>Update Status / Actualizar estado</span><span class="hint">Change trailer status / Cambiar estado del remolque ▾</span></button>
+        <button id="statusToggle" type="button"><span>Update Status / Actualizar estado</span><span aria-hidden="true">▾</span></button>
         <div id="statusPanel" class="action-panel hidden">
           <div class="status-select-row">
             <div>
@@ -411,10 +411,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       </div>
 
       <div class="action-choice">
-        <button id="moveToggle" type="button"><span>Move / Mover</span><span class="hint">Assign a destination / Asignar un destino ▾</span></button>
+        <button id="moveToggle" type="button"><span>Move / Mover</span><span aria-hidden="true">▾</span></button>
         <div id="movePanel" class="action-panel hidden">
           <div id="currentMove" class="move-current hidden"></div>
-          <div id="pendingMove" class="move-pending hidden"></div>
 
           <div class="instruction-type-picker" aria-label="Request type / Tipo de solicitud">
             <button id="requestMoveType" class="instruction-type-btn active" type="button">Move / Mover</button>
@@ -423,7 +422,6 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           </div>
 
           <div id="moveDestinationArea">
-            <p class="move-help">For a Move, select a building. Choose a dock for a specific move, or press Update without a dock for a general move / Para mover, seleccione un edificio. Elija una puerta específica o presione Actualizar sin elegir una puerta para un movimiento general.</p>
             <div class="building-picker">
               <button id="pick100" class="building-btn" type="button">Building 100 / Edificio 100</button>
               <button id="pick200" class="building-btn" type="button">Building 200 / Edificio 200</button>
@@ -1675,10 +1673,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       pick100.classList.remove("active","general-selected");pick200.classList.remove("active","general-selected");
       pick100.textContent="Building 100 / Edificio 100";pick200.textContent="Building 200 / Edificio 200";
     }
-    function showPendingMove(text){
-      if(text){pendingMoveEl.textContent=text;pendingMoveEl.classList.remove("hidden")}
-      else{pendingMoveEl.textContent="";pendingMoveEl.classList.add("hidden")}
-    }
+    function showPendingMove(_text){}
     function refreshCurrentMoveDisplay(d){
       const type=activeInstructionType(d);
       if(type){
