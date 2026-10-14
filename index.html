@@ -256,6 +256,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 <script src="word-fit.js?v=20261014" defer></script>
+<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261014" defer></script>
 </head>
 <body>
 <div id="app">
@@ -287,7 +288,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           <span class="theme-label dark-label">Dark</span>
         </label>
         <div class="sound-controls"><button id="soundToggle" class="secondary small sound-toggle" type="button" aria-pressed="true">🔊 Sound On</button><label class="sound-volume">Volume<select id="soundVolume" aria-label="Sound volume"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label></div>
-        <span id="userEmail" class="user-email"></span><small id="dockRoleLabel"></small><button id="dockAccessTop" class="secondary small" type="button" hidden>User Access</button><button id="signOutBtn" class="secondary small">Sign out</button>
+        <button id="userEmail" class="user-email" type="button" aria-haspopup="dialog" aria-label="Account Options"></button><small id="dockRoleLabel"></small><button id="dockAccessTop" class="secondary small" type="button" hidden>User Access</button><button id="signOutBtn" class="secondary small">Sign out</button>
       </div>
     </header>
 
@@ -2218,7 +2219,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.textContent=user.email||"";setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
