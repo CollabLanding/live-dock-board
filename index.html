@@ -386,7 +386,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <div id="actionBackdrop" class="modal-backdrop hidden" role="presentation">
   <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
     <header class="modal-head">
-      <div><h2 id="actionTitle">Dock</h2><p id="actionSubtitle"></p></div>
+      <div><h2 id="actionTitle">Dock</h2></div>
       <div class="modal-head-actions">
         <button id="hideDockButton" class="hide-dock-header-btn" type="button" title="Hide this dock / Ocultar esta puerta">Hide</button>
         <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
@@ -873,7 +873,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
     function renderTrailerActivity(){
       trailerActivityList.innerHTML=trailerActivityRows.length?trailerActivityRows.map(row=>{
-        const who=row.changed_by_email||"Unknown user";
+        const who=row.changed_by_email?userName(row.changed_by_email):"Unknown user";
         return `<div class="activity-item"><div><strong>${safe(row.trailer_number)}</strong> · <span class="trailer-activity-action ${row.action==="Attached"?"attached":"released"}">${safe(row.action)}</span></div><div>Building ${row.building} · Dock ${row.dock_number}</div><div class="time">${new Date(row.changed_at).toLocaleString()} · ${safe(who)}</div></div>`;
       }).join(""):'<div class="activity-empty">No trailer activity yet.</div>';
     }
@@ -1693,7 +1693,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const currentInstructionType=activeInstructionType(d);
       pendingMove={type:currentInstructionType,building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),changed:false,clear:false};
       actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${d.dock_number}`;
-      actionSubtitle.textContent=`${sideBilingual(d.side)} · ${initialStatus==="Custom"?(initialCustomStatusText||STATUS_BILINGUAL[initialStatus]):(STATUS_BILINGUAL[initialStatus]||initialStatus)}`;
+
       statusSelect.value=initialStatus;
       renderStatusChoices();
       customStatusText.value=initialStatus==="Custom"?initialCustomStatusText:"";
@@ -1719,7 +1719,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         data.status=normalizedStatus(data.status);docks.set(data.id,data);renderEverything();
         if(selectedDockId===data.id){
           const savedCustom=String(data.custom_status_text||"");
-          actionSubtitle.textContent=`${sideBilingual(data.side)} · ${data.status==="Custom"?(savedCustom||STATUS_BILINGUAL[data.status]):(STATUS_BILINGUAL[data.status]||data.status)}`;
+
           statusSelect.value=data.status;initialStatus=data.status;initialCustomStatusText=savedCustom;
           renderStatusChoices();
           customStatusText.value=data.status==="Custom"?savedCustom:"";
@@ -2034,9 +2034,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           <button type="button" class="activity-response-btn done ${h.activity_status==="Done"?"active":""}" data-history-id="${h.id}" data-activity-status="Done">Done</button>
           <button type="button" class="activity-response-btn clarification ${h.activity_status==="Need Clarification"?"active":""}" data-history-id="${h.id}" data-activity-status="Need Clarification">Need Clarification</button>
         </div>`:"";
-        const originalWho=h.changed_by_email?safe(h.changed_by_email):"Unknown user";
+        const originalWho=h.changed_by_email?safe(userName(h.changed_by_email)):"Unknown user";
         const responseLine=h.activity_status
-          ? `<div class="time"><strong>${safe(h.activity_status)}</strong>: ${new Date(h.activity_status_changed_at||h.activity_last_at||h.changed_at).toLocaleString()} · ${h.activity_status_changed_by_email?safe(h.activity_status_changed_by_email):"Unknown user"}</div>`
+          ? `<div class="time"><strong>${safe(h.activity_status)}</strong>: ${new Date(h.activity_status_changed_at||h.activity_last_at||h.changed_at).toLocaleString()} · ${h.activity_status_changed_by_email?safe(userName(h.activity_status_changed_by_email)):"Unknown user"}</div>`
           : "";
         const hint=actionable&&!expanded
           ?`<button type="button" class="activity-hint activity-hint-button" data-toggle-activity="${h.id}">Click to update this request</button>`
