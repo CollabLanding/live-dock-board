@@ -16,7 +16,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
     *{overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
 </style><script src="word-fit.js?v=20261014" defer></script>
-<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261014" defer></script>
+<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261015-password" defer></script>
 </head><body><main>
 <header><div class="brand"><img src="site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><nav class="yard-nav-primary"><a href="index.html">Yard View</a><a href="trailers.html">Trailers</a><h1><a href="docks.html" aria-current="page">Docks</a></h1></nav><a class="yard-nav-secondary" href="/Transfers/">Transfers</a></div></div><div class="user-tools"><button id="userLabel" class="yard-account-toggle" type="button" aria-haspopup="dialog" aria-label="Account Options"></button><button id="themeToggle" type="button">Light / Dark</button><button id="signOut" type="button" hidden>Sign out</button></div></header>
 <section id="loginPanel" class="panel login" hidden><h2>Sign in</h2><form id="loginForm" class="form-grid"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button class="primary">Sign in</button><p id="loginMessage" role="status"></p></form></section>
@@ -26,6 +26,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </main><script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const sb=window.supabase.createClient("https://wcbmyrtpmrwstbmkeqjt.supabase.co","sb_publishable_9N-bP0PF2xxO2XNFKy-rhQ_5e8cT3tN",{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
+window.YardAccountAuth=sb.auth;
 const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const REMEMBER="live-trailer-board-remembered-session-v1",TAB="live-trailer-board-tab-session-v1";let user=null,admin=false,docks=[],editing=null,channel=null,reloadTimer=null,loadingVersion=0,saving=false;
 function remember(session){if(!session)return;const snap={access_token:session.access_token,refresh_token:session.refresh_token};try{const storage=localStorage.getItem(REMEMBER)?localStorage:sessionStorage,key=storage===localStorage?REMEMBER:TAB;storage.setItem(key,JSON.stringify(snap))}catch{}}
