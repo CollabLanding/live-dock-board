@@ -256,7 +256,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 <script src="word-fit.js?v=20261014" defer></script>
-<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261014" defer></script>
+<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261015-password" defer></script>
 </head>
 <body>
 <div id="app">
@@ -530,7 +530,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       supabaseUrl:"https://wcbmyrtpmrwstbmkeqjt.supabase.co",
       supabaseAnonKey:"sb_publishable_9N-bP0PF2xxO2XNFKy-rhQ_5e8cT3tN"
     };
-    const supabase=createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
+    const supabase=createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});window.YardAccountAuth=supabase.auth;
     const REMEMBER_KEY="live-trailer-board-remembered-session-v1";
     const SESSION_KEY="live-trailer-board-tab-session-v1";
     const CHAT_CLEAR_SENTINEL="__LIVE_TRAILER_BOARD_CLEAR_CHAT_V1__";
