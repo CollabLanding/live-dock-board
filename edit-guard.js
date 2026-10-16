@@ -194,9 +194,9 @@ document.addEventListener("dragstart",beginInteraction,true);
 for(const type of ["pointerup","pointercancel","dragend"])document.addEventListener(type,()=>setTimeout(()=>interaction.clear(),0),true);
 document.addEventListener("DOMContentLoaded",()=>{
  const style=document.createElement("style");style.textContent='.edit-review{width:min(880px,94vw);max-height:85vh;overflow:auto;border:1px solid var(--border,var(--line,#64748b));border-radius:14px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212b)}.edit-review::backdrop{background:#0009}.edit-review pre{white-space:pre-wrap;overflow-wrap:break-word;font:12px/1.5 monospace}.edit-review button{margin:5px;padding:7px 12px}.edit-review article{border-bottom:1px solid #8886;padding:12px 0}.edit-review article div{font-size:12px;opacity:.8}';document.head.append(style);
- const anchor=document.querySelector(".topbar-actions,.topbar .user-session,.user-session,.topbar");
- if(!anchor)return;
+ const exportButton=document.getElementById("exportCsv");
+ if(!exportButton)return;
  const history=document.createElement("button");history.type="button";history.className="secondary small";history.textContent="Edit history";history.dataset.editHistoryControl="";history.dataset.permission="edit_history";history.hidden=true;history.onclick=openHistory;
- const metrics=history.cloneNode();delete metrics.dataset.editHistoryControl;metrics.dataset.liveConnectionControl="";metrics.dataset.permission="live_connection";metrics.textContent="Live connection";metrics.onclick=openMetrics;anchor.append(history,metrics);applyFeatureControls();
+ const metrics=history.cloneNode();delete metrics.dataset.editHistoryControl;metrics.dataset.liveConnectionControl="";metrics.dataset.permission="live_connection";metrics.textContent="Live connection";metrics.onclick=openMetrics;exportButton.after(history,metrics);applyFeatureControls();
 });
 })();
