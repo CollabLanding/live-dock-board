@@ -13,7 +13,9 @@ function showConflict(table,current,patch){
  const keep=document.createElement("button");keep.textContent="Keep my draft";keep.onclick=()=>d.close();
  const latest=document.createElement("button");latest.textContent="Load latest version";latest.onclick=()=>{
   Object.values(current||{}).forEach(row=>{pins.delete(key(table,row.id));remember(table,row)});
-  document.dispatchEvent(new CustomEvent("edit-load-latest",{detail:{table,rows:Object.values(current||{})}}));d.close();
+  const detail={table,rows:Object.values(current||{}),handled:false};
+  document.dispatchEvent(new CustomEvent("edit-load-latest",{detail}));d.close();
+  if(!detail.handled)window.location.reload();
  };
  d.append(h,p,before,keep,latest);document.body.append(d);d.addEventListener("close",()=>d.remove(),{once:true});d.showModal();
 }
@@ -63,6 +65,16 @@ window.supabase={...window.supabase,createClient(...args){
  const from=sb.from.bind(sb),channel=sb.channel.bind(sb),rpc=sb.rpc.bind(sb);
  const guardedActions=new Set(["set_docks_hidden","assign_dock_trailer","release_dock_trailer","complete_seal_check","respond_dock_activity","save_dock_details"]);
  sb.rpc=async(name,args,...rest)=>{
+  if(name==="save_summary_record"&&!args.p_deleted){
+   const table=args.p_type==="Job"?"transfers":"transfer_slot_statuses",k=key(table,args.p_id),row=pins.get(k)||cache.get(k);
+   const r=await rpc("guarded_summary_edit",{p_args:args,p_expected:row?.edit_revision??null});
+   if(r.error)return r;
+   if(!r.data?.ok){
+    if(r.data?.conflict){Object.values(r.data.current||{}).forEach(row=>remember(table,row));showConflict(table,r.data.current,args);}
+    return {data:null,error:{message:r.data?.message||"Report edit not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
+   }
+   remember(table,r.data.row);return {data:r.data.result,error:null};
+  }
   if(["move_board_link_group","resize_board_link_group"].includes(name)){
    const expected={};for(const [k,row] of cache){const baseline=pins.get(k)||interaction.get(k)||row;if(baseline.edit_revision!=null)expected[k]=baseline.edit_revision;}
    const started=performance.now(),r=await rpc("guarded_board_action",{p_action:name,p_args:args,p_expected:expected});
