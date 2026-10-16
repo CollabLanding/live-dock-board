@@ -70,8 +70,7 @@ function mutation(sb,table,patch,operation){
      if(r.data?.conflict){Object.values(r.data.current||{}).forEach(row=>remember(table,row));showConflict(table,r.data.current,patch);}
      return {data:null,error:{message:r.data?.message||"Edit not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
     }
-    remember(table,r.data.rows);
-    for(const row of r.data.rows||[])if(pins.has(key(table,row.id)))pins.set(key(table,row.id),{...row});
+    acceptOwn(table,r.data.rows);
     return {data:selected?(single?r.data.rows?.[0]||null:r.data.rows):null,error:null};
    })();
    return promise.then(resolve,reject);
@@ -122,7 +121,7 @@ window.supabase={...window.supabase,createClient(...args){
   }
   if(["move_board_link_group","resize_board_link_group"].includes(name)){
    const expected={};for(const [k,row] of cache){const baseline=pins.get(k)||interaction.get(k)||row;if(baseline.edit_revision!=null)expected[k]=baseline.edit_revision;}
-   const started=performance.now(),r=await rpc("guarded_board_action",{p_action:name,p_args:args,p_expected:expected});
+   const started=performance.now(),r=await rpc("guarded_board_action",{p_action:name,p_args:args,p_expected:rebaseOwn(expected,null)});
    stats.saves.push(performance.now()-started);if(stats.saves.length>100)stats.saves.shift();
    if(r.error)return r;
    if(!r.data?.ok){
