@@ -1303,7 +1303,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const bar=$("dockGroupBar");bar.replaceChildren();
       for(const group of dockGroups.filter(g=>Number(g.building)===selectedMoveBuilding)){
         const b=document.createElement("button");b.type="button";b.textContent=group.title;b.classList.toggle("selected",pendingMove?.group?.id===group.id);b.setAttribute("aria-pressed",String(pendingMove?.group?.id===group.id));b.title=group.dock_ids.map(id=>docks.get(id)?.dock_number).filter(n=>n!=null).join(", ");
-        b.onclick=()=>{pendingMove={type:"Move",building:selectedMoveBuilding,dock:null,group:{id:group.id,title:group.title,dock_ids:group.dock_ids},changed:true,clear:false};dockPicker.querySelectorAll(".dock-dest").forEach(n=>n.classList.remove("selected"));renderDockGroupBar();modalMessage.textContent="Move → B"+selectedMoveBuilding+" · "+group.title;};bar.append(b);
+        b.onclick=()=>{pendingMove={type:"Move",building:selectedMoveBuilding,dock:null,group:{id:group.id,title:group.title,dock_ids:group.dock_ids},changed:true,clear:false};dockPicker.querySelectorAll(".dock-dest").forEach(n=>n.classList.remove("selected"));const buildingButton=selectedMoveBuilding===100?pick100:pick200;buildingButton.classList.remove("general-selected");buildingButton.textContent="Building / Edificio "+selectedMoveBuilding;renderDockGroupBar();modalMessage.textContent="Move → B"+selectedMoveBuilding+" · "+group.title;};bar.append(b);
       }
     }
     function activeInstructionType(d){
