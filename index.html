@@ -80,6 +80,7 @@
     .action-choice>button .hint{font-size:12px;color:var(--muted);font-weight:600}.action-panel{padding:15px 16px;border-top:1px solid var(--border)}
     .status-select-row{display:grid;gap:12px;align-items:end}.status-option-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.status-option-btn{position:relative;min-height:58px;border:2px solid transparent;border-radius:11px;padding:8px 7px;color:#fff;font-size:12px;font-weight:900;line-height:1.15;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);white-space:normal}.status-option-btn:hover{filter:brightness(.96)}.status-option-btn.selected{border-color:#0f172a;box-shadow:0 0 0 3px rgba(15,23,42,.16),inset 0 0 0 1px rgba(255,255,255,.3)}.status-option-btn.selected::after{content:"✓";position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:999px;display:grid;place-items:center;background:#fff;color:#0f172a;font-size:11px}.status-option-btn.status-loading{color:#fff}@media(max-width:620px){.status-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .instruction-type-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.instruction-type-btn{min-height:48px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:7px 8px;font-size:12px;font-weight:900}.instruction-type-btn.active{border-color:var(--accent);background:#eff6ff;color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}.building-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px}.building-btn{min-height:62px;border:1px solid var(--border);border-radius:12px;background:#fff;font-weight:900}.building-btn.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.14);color:var(--accent)}.building-btn.general-selected{background:#eff6ff;border-color:var(--accent);color:var(--accent)}
+    .dock-group-bar{display:flex;flex-wrap:wrap;gap:7px;min-height:40px;margin:12px 0}.dock-group-bar button{border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--panel);color:var(--text);font-weight:800}.dock-group-bar button.selected{background:#2563eb;color:#fff;border-color:#2563eb}.dock-group-bar:empty{display:none}
     .move-help{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.45}.move-current,.move-pending{margin:0 0 12px;padding:11px 12px;border-radius:10px;font-size:13px;font-weight:700}.move-current{background:#eff6ff;color:#1e3a8a}.move-pending{background:#f0fdf4;color:#166534}
     .dock-picker-title{margin:15px 0 8px;font-size:13px;color:var(--muted);font-weight:800}.dock-picker{display:grid;grid-template-columns:repeat(10,minmax(42px,1fr));gap:7px}.dock-dest{min-height:44px;border:1px solid var(--border);border-radius:9px;background:#fff;font-weight:900}.dock-dest:hover{border-color:var(--accent);color:var(--accent)}.dock-dest.selected{background:#eff6ff;border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}.dock-dest.source{opacity:.45;cursor:not-allowed;text-decoration:line-through}.dock-dest.occupied{background:#f8fafc;color:#94a3b8}.dock-dest.selected.occupied{background:#eff6ff;color:var(--accent)}
     .modal-footer{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.modal-footer .primary{width:100%;min-height:50px;font-size:16px}.modal-message{margin-top:12px;min-height:20px;font-size:13px;color:var(--muted)}.batch-selected-list{margin:8px 0 14px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;color:var(--muted);font-size:12px;line-height:1.45}.batch-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}.batch-actions button{min-width:145px}.batch-hide-btn{background:#e2e8f0;border-color:#cbd5e1;color:#334155}.batch-hide-btn:hover{background:#cbd5e1}
@@ -428,7 +429,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
               <button id="pick200" class="building-btn" type="button">Building 200 / Edificio 200</button>
             </div>
             <div id="dockPickerWrap" class="hidden">
-              <div id="dockPickerTitle" class="dock-picker-title"></div>
+              <div id="dockGroupBar" class="dock-group-bar" aria-label="Grouping"></div><div id="dockPickerTitle" class="hidden"></div>
               <div id="dockPicker" class="dock-picker"></div>
             </div>
           </div>
@@ -1231,7 +1232,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         // OPEN always clears active requests, matching the individual dock workflow.
         if(batchStatusValue==="Open Dock"){
           full.instruction_type=null;
-          full.move_to_building=null;
+          full.move_to_building=null;full.move_to_group=null;
           full.move_to_dock_number=null;
           full.move_instruction_at=null;
           full.move_timer_paused_at=null;
@@ -1243,7 +1244,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(batchStatusValue!=="Open Dock"){
         if(batchClearInstruction){
           full.instruction_type=null;
-          full.move_to_building=null;
+          full.move_to_building=null;full.move_to_group=null;
           full.move_to_dock_number=null;
           full.move_instruction_at=null;
           full.move_timer_paused_at=null;
@@ -1256,11 +1257,11 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
               return;
             }
             full.instruction_type="Move";
-            full.move_to_building=batchMoveBuilding;
+            full.move_to_building=batchMoveBuilding;full.move_to_group=null;
             full.move_to_dock_number=null;
           }else{
             full.instruction_type=batchInstructionValue;
-            full.move_to_building=null;
+            full.move_to_building=null;full.move_to_group=null;
             full.move_to_dock_number=null;
           }
 
@@ -1296,6 +1297,15 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       await loadHistory();
     }
     function renderEverything(){renderRow("b100",rowDocks(100,"Parking Lot",false));renderRow("b200Parking",rowDocks(200,"Parking Lot",true));renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));renderSummary();renderTrailerLists();access.apply()}
+    let dockGroups=[],groupChannel=null,groupLoadVersion=0;
+    async function loadDockGroups(){const token=++groupLoadVersion;const r=await supabase.from("dock_groups").select("*").order("title");if(r.error)throw r.error;if(token!==groupLoadVersion)return;dockGroups=r.data||[];renderDockGroupBar();}
+    function renderDockGroupBar(){
+      const bar=$("dockGroupBar");bar.replaceChildren();
+      for(const group of dockGroups.filter(g=>Number(g.building)===selectedMoveBuilding)){
+        const b=document.createElement("button");b.type="button";b.textContent=group.title;b.classList.toggle("selected",pendingMove?.group?.id===group.id);b.setAttribute("aria-pressed",String(pendingMove?.group?.id===group.id));b.title=group.dock_ids.map(id=>docks.get(id)?.dock_number).filter(n=>n!=null).join(", ");
+        b.onclick=()=>{pendingMove={type:"Move",building:selectedMoveBuilding,dock:null,group:{id:group.id,title:group.title,dock_ids:group.dock_ids},changed:true,clear:false};dockPicker.querySelectorAll(".dock-dest").forEach(n=>n.classList.remove("selected"));renderDockGroupBar();modalMessage.textContent="Move → B"+selectedMoveBuilding+" · "+group.title;};bar.append(b);
+      }
+    }
     function activeInstructionType(d){
       if(d?.instruction_type)return d.instruction_type;
       return d?.move_instruction_at&&d?.move_to_building?"Move":null;
@@ -1309,7 +1319,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(type==="Seal Check")return "SEAL CHECK";
       return "";
     }
-    function moveLabel(d){return instructionLabel(activeInstructionType(d),d.move_to_building,d.move_to_dock_number)}
+    function moveLabel(d){return instructionLabel(activeInstructionType(d),d.move_to_building,d.move_to_dock_number)+(d.move_to_group?" · "+d.move_to_group.title:"")}
     function sameInstruction(aType,aBuilding,aDock,bType,bBuilding,bDock){
       const at=aType||null,bt=bType||null;
       if(at!==bt)return false;
@@ -1659,7 +1669,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(!["Move","Adjust","Seal Check"].includes(type))return;
       const current=pendingMove||{type:null,building:null,dock:null,changed:false,clear:false};
       if(type==="Move"){
-        pendingMove={type:"Move",building:current.type==="Move"?current.building:null,dock:current.type==="Move"?current.dock:null,changed:true,clear:false};
+        pendingMove={type:"Move",building:current.type==="Move"?current.building:null,dock:current.type==="Move"?current.dock:null,group:current.type==="Move"?current.group:null,changed:true,clear:false};
         showPendingMove(pendingMove.building
           ?`Pending request / Solicitud pendiente: ${instructionLabel("Move",pendingMove.building,pendingMove.dock)}. Press Update / Presione Actualizar to save / para guardar.`
           :"Move selected / Mover seleccionado: choose Building 100 or 200 / elija Edificio 100 o 200.");
@@ -1681,7 +1691,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function refreshCurrentMoveDisplay(d){
       const type=activeInstructionType(d);
       if(type){
-        const detail=type==="Move"?`Move to / Mover a ${formatMove(d.move_to_building,d.move_to_dock_number)}`:instructionLabel(type,null,null);
+        const detail=type==="Move"?`Move to / Mover a ${formatMove(d.move_to_building,d.move_to_dock_number)}${d.move_to_group?" · "+d.move_to_group.title:""}`:instructionLabel(type,null,null);
         currentMove.textContent=`Current request / Solicitud actual: ${detail}`;
         currentMove.classList.remove("hidden");clearMove.classList.remove("hidden");
       }else{
@@ -1696,7 +1706,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       initialStatus=normalizedStatus(d.status);
       initialCustomStatusText=String(d.custom_status_text||"");
       const currentInstructionType=activeInstructionType(d);
-      pendingMove={type:currentInstructionType,building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),changed:false,clear:false};
+      pendingMove={type:currentInstructionType,building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),group:d.move_to_group||null,changed:false,clear:false};
       actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${d.dock_number}`;
 
       statusSelect.value=initialStatus;
@@ -1707,7 +1717,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       resetMoveButtons();showPendingMove("");modalMessage.textContent="";modalMessage.style.color="";
       renderInstructionTypeButtons(currentInstructionType||"Move");
       refreshCurrentMoveDisplay(d);
-      actionBackdrop.classList.remove("hidden")
+      actionBackdrop.classList.remove("hidden");loadDockGroups().catch(e=>{modalMessage.textContent=e.message})
     }
     document.addEventListener("edit-load-latest",event=>{
       if(event.detail.table!=="docks")return;
@@ -1736,7 +1746,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           customStatusText.value=data.status==="Custom"?savedCustom:"";
           customStatusWrap.classList.toggle("hidden",data.status!=="Custom");
           const savedInstructionType=activeInstructionType(data);
-          pendingMove={type:savedInstructionType,building:data.move_to_building==null?null:Number(data.move_to_building),dock:data.move_to_dock_number==null?null:Number(data.move_to_dock_number),changed:false,clear:false};
+          pendingMove={type:savedInstructionType,building:data.move_to_building==null?null:Number(data.move_to_building),dock:data.move_to_dock_number==null?null:Number(data.move_to_dock_number),group:data.move_to_group||null,changed:false,clear:false};
           selectedMoveBuilding=null;dockPickerWrap.classList.add("hidden");resetMoveButtons();showPendingMove("");
           renderInstructionTypeButtons(savedInstructionType||"Move");
           refreshCurrentMoveDisplay(data)
@@ -1758,13 +1768,13 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
       dockPickerWrap.classList.remove("hidden");
       dockPickerTitle.textContent=`Choose a dock for a specific move, or leave blank for General / Elija una puerta específica o déjelo en blanco para General`;
-      dockPicker.innerHTML="";
+      dockPicker.innerHTML="";renderDockGroupBar();
 
       showPendingMove(`Pending move / Movimiento pendiente: ${formatMove(building,null)}. Choose a dock below for a specific move, or press Update / Presione Actualizar for General.`);
       modalMessage.textContent="";
 
       const source=docks.get(selectedDockId);
-      const nums=building===100?Array.from({length:30},(_,i)=>i+1):Array.from({length:54},(_,i)=>i+1);
+      const nums=[...new Set([...docks.values()].filter(d=>Number(d.building)===building).map(d=>Number(d.dock_number)))].sort((a,b)=>a-b);
       nums.forEach(n=>{
         const dest=[...docks.values()].find(d=>d.building===building&&d.dock_number===n);if(!dest)return;
         const b=document.createElement("button");b.type="button";b.className="dock-dest";b.textContent=n;
@@ -1773,7 +1783,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         else if(occupied){b.classList.add("occupied");b.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`}
 
         b.addEventListener("click",()=>{
-          pendingMove={type:"Move",building,dock:n,changed:true,clear:false};
+          pendingMove={type:"Move",building,dock:n,group:null,changed:true,clear:false};renderDockGroupBar();
           [...dockPicker.querySelectorAll(".dock-dest")].forEach(x=>x.classList.remove("selected"));
           b.classList.add("selected");
           btn.classList.remove("general-selected");
@@ -1851,10 +1861,17 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         }
       }
 
+      if(pendingMove?.changed||statusChanged&&newStatus==="Open Dock"){
+        payload.move_to_group=payload.instruction_type==="Move"?(pendingMove?.group||null):null;
+      }
+      const groupWillChange=("move_to_group" in payload)&&JSON.stringify(current.move_to_group||null)!==JSON.stringify(payload.move_to_group||null);
+      if(groupWillChange&&payload.instruction_type==="Move"){
+        payload.move_instruction_at=new Date().toISOString();payload.move_timer_paused_at=null;payload.move_timer_paused_ms=0;
+      }
       const nextInstructionType=("instruction_type" in payload)?payload.instruction_type:currentInstructionType;
       const nextBuilding=("move_to_building" in payload)?payload.move_to_building:current.move_to_building;
       const nextDock=("move_to_dock_number" in payload)?payload.move_to_dock_number:current.move_to_dock_number;
-      const instructionWillChange=("instruction_type" in payload||"move_to_building" in payload||"move_to_dock_number" in payload)
+      const instructionWillChange=groupWillChange||("instruction_type" in payload||"move_to_building" in payload||"move_to_dock_number" in payload)
         &&!sameInstruction(currentInstructionType,current.move_to_building,current.move_to_dock_number,nextInstructionType,nextBuilding,nextDock);
 
       if(!statusChanged&&!customChanged&&!instructionWillChange){
@@ -1880,7 +1897,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function historyInstructionLabel(h,which){
       const type=historyInstructionType(h,which);
       if(!type)return "";
-      if(type==="Move")return `Move → ${historyMoveLabel(h[`${which}_move_to_building`],h[`${which}_move_to_dock_number`])}`;
+      if(type==="Move")return `Move → ${historyMoveLabel(h[`${which}_move_to_building`],h[`${which}_move_to_dock_number`])}${h[`${which}_move_to_group`]?" · "+h[`${which}_move_to_group`].title:""}`;
       return type;
     }
     function isInstructionAssignment(h){
@@ -1888,7 +1905,8 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(!newType)return false;
       return oldType!==newType
         || h.old_move_to_building!==h.new_move_to_building
-        || h.old_move_to_dock_number!==h.new_move_to_dock_number;
+        || h.old_move_to_dock_number!==h.new_move_to_dock_number
+        || JSON.stringify(h.old_move_to_group||null)!==JSON.stringify(h.new_move_to_group||null);
     }
     function activitySearchText(h){
       const oldS=normalizedStatus(h.old_status),newS=normalizedStatus(h.new_status);
@@ -2089,14 +2107,14 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
       pendingMoveCompletion={historyId:String(historyId),activity:{...activity}};
       moveCompletionBusy=false;
-      moveCompletionSubtitle.textContent=`Move to Building ${building} / Mover a Edificio ${building} — select the destination dock`;
+      moveCompletionSubtitle.textContent=`Move to Building ${building} / Mover a Edificio ${building} ${activity.new_move_to_group?" · "+activity.new_move_to_group.title:""} — select the destination dock`;
       moveCompletionMessage.textContent="";
       moveCompletionMessage.style.color="";
       moveCompletionDockPicker.innerHTML="";
 
       const source=docks.get(activity.dock_id);
       const destinations=[...docks.values()]
-        .filter(d=>Number(d.building)===building)
+        .filter(d=>Number(d.building)===building&&(!activity.new_move_to_group||activity.new_move_to_group.dock_ids.includes(d.id)))
         .sort((a,b)=>Number(a.dock_number)-Number(b.dock_number));
 
       if(!destinations.length){
@@ -2116,7 +2134,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           button.classList.add("source");
           button.disabled=true;
           button.title="This is the source dock / Esta es la puerta de origen";
-        }else if(!open){
+        }else if(!open||dest.is_hidden){
           button.classList.add("occupied");
           button.disabled=true;
           button.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`;
@@ -2144,7 +2162,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(!access.can("respond_moves")||!ACTIVITY_META[status])return;
       const soundKey=historyId+"|"+status;pendingLocalActivitySounds.add(soundKey);
       try{
-        const {data:activity,error:readError}=await supabase.from("dock_history").select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_instruction_type,activity_status").eq("id",historyId).single();if(readError)throw readError;
+        const {data:activity,error:readError}=await supabase.from("dock_history").select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_move_to_group,new_instruction_type,activity_status").eq("id",historyId).single();if(readError)throw readError;
         if(status==="Done"&&String(activity.new_instruction_type||"Move")==="Move"&&activity.new_move_to_building!=null&&activity.new_move_to_dock_number==null&&activity.activity_status!=="Done"){pendingLocalActivitySounds.delete(soundKey);openMoveCompletionPicker(historyId,activity);return}
         const {error}=await supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:status});if(error)throw error;
         activityStatusCache.set(historyId,status);pendingLocalActivitySounds.delete(soundKey);const sound=activitySoundKind(status);if(sound)playSound(sound);expandedActivityId=historyId;
@@ -2225,6 +2243,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(payload.eventType==="INSERT"&&payload.new)upsertChatMessage(payload.new);
     }
     function subscribeRealtime(){
+      if(groupChannel)supabase.removeChannel(groupChannel);groupChannel=supabase.channel("dock-groups-live").on("postgres_changes",{event:"*",schema:"public",table:"dock_groups"},()=>loadDockGroups().catch(console.error)).subscribe();
       if(dockChannel)supabase.removeChannel(dockChannel);if(historyChannel)supabase.removeChannel(historyChannel);if(chatChannel)supabase.removeChannel(chatChannel);
       if(trailerCatalogChannel)supabase.removeChannel(trailerCatalogChannel);
       trailerCatalogChannel=supabase.channel("trailer-catalog-live").on("postgres_changes",{event:"*",schema:"public",table:"trailers"},()=>{clearTimeout(trailerCatalogTimer);trailerCatalogTimer=setTimeout(()=>loadTrailerCatalog().catch(err=>alert("Could not load trailers: "+err.message)),100)}).subscribe();
@@ -2235,7 +2254,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog(),loadDockGroups()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
@@ -2316,7 +2335,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       try{if(presenceChannel)await presenceChannel.untrack()}catch(_err){}
       for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel,trailerActivityChannel,trailerCatalogChannel]){if(channel)supabase.removeChannel(channel)}
       dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;trailerActivityChannel=null;trailerCatalogChannel=null;clearTimeout(trailerCatalogTimer);clearTimeout(trailerActivityTimer);trailerActivityLoadVersion++;
-      await supabase.auth.signOut();currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];chatMessages=[];warnedMoveKeys.clear();remindedMoveKeys.clear();pendingLocalActivitySounds.clear();pendingSealCompletionDockIds.clear();
+      await supabase.auth.signOut();groupLoadVersion++;dockGroups=[];if(groupChannel){await supabase.removeChannel(groupChannel);groupChannel=null}currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];chatMessages=[];warnedMoveKeys.clear();remindedMoveKeys.clear();pendingLocalActivitySounds.clear();pendingSealCompletionDockIds.clear();
       activeUsersCount.textContent="0";activeUsersList.innerHTML='<div class="active-empty">Not signed in</div>';renderChat();
       if(doneExpiryTimer)clearTimeout(doneExpiryTimer);if(moveFadeTimer)clearInterval(moveFadeTimer);moveFadeTimer=null;showLogin()
     });
