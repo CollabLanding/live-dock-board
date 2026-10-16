@@ -1710,6 +1710,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     }
     document.addEventListener("edit-load-latest",event=>{
       if(event.detail.table!=="docks")return;
+      event.detail.handled=true;
       for(const row of event.detail.rows)docks.set(row.id,row);
       renderEverything();if(selectedDockId)openDock(selectedDockId);
     });
