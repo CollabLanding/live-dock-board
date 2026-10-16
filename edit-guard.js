@@ -1,7 +1,7 @@
 (()=>{
 "use strict";
 const targets=new Set(["transfers","transfer_slot_statuses","docks"]);
-const cache=new Map(),pins=new Map(),stats={saves:[],sync:[],connections:new Map()};
+const cache=new Map(),pins=new Map(),interaction=new Map(),stats={saves:[],sync:[],connections:new Map()};
 let client=null,dialog=null,historyBefore=null,historyRows=[];
 const key=(t,id)=>t+":"+id;
 function remember(table,rows){for(const row of Array.isArray(rows)?rows:[rows])if(row?.id&&row.edit_revision!=null){const k=key(table,row.id),old=cache.get(k);if(!old||Number(row.edit_revision)>=Number(old.edit_revision))cache.set(k,{...old,...row});}}
@@ -20,7 +20,7 @@ function showConflict(table,current,patch){
 function mutation(sb,table,patch,operation){
  let ids=[],single=false,selected=false,invalid=false,promise;
  const expected={};
- function capture(values){ids=values.map(String);for(const id of ids){const row=pins.get(key(table,id))||cache.get(key(table,id));if(row?.edit_revision!=null)expected[id]=row.edit_revision;}}
+ function capture(values){ids=values.map(String);for(const id of ids){const row=pins.get(key(table,id))||interaction.get(key(table,id))||cache.get(key(table,id));if(row?.edit_revision!=null)expected[id]=row.edit_revision;}}
  const chain={
   eq(column,value){if(column==="id")capture([value]);else invalid=true;return chain},
   in(column,values){if(column==="id")capture(values);else invalid=true;return chain},
@@ -63,9 +63,24 @@ window.supabase={...window.supabase,createClient(...args){
  const from=sb.from.bind(sb),channel=sb.channel.bind(sb),rpc=sb.rpc.bind(sb);
  const guardedActions=new Set(["set_docks_hidden","assign_dock_trailer","release_dock_trailer","complete_seal_check","respond_dock_activity","save_dock_details"]);
  sb.rpc=async(name,args,...rest)=>{
+  if(["move_board_link_group","resize_board_link_group"].includes(name)){
+   const expected={};for(const [k,row] of cache){const baseline=pins.get(k)||interaction.get(k)||row;if(baseline.edit_revision!=null)expected[k]=baseline.edit_revision;}
+   const started=performance.now(),r=await rpc("guarded_board_action",{p_action:name,p_args:args,p_expected:expected});
+   stats.saves.push(performance.now()-started);if(stats.saves.length>100)stats.saves.shift();
+   if(r.error)return r;
+   if(!r.data?.ok){
+    if(r.data?.conflict){
+     const byTable={};for(const [k,row] of Object.entries(r.data.current||{})){const table=k.split(":")[0];remember(table,row);(byTable[table]??={})[row.id]=row;}
+     const table=Object.keys(byTable)[0];if(table)showConflict(table,byTable[table],args);
+    }
+    return {data:null,error:{message:r.data?.message||"Board action not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
+   }
+   remember("transfers",r.data.result?.jobs||[]);remember("transfer_slot_statuses",r.data.result?.statuses||[]);
+   return {data:r.data.result,error:null};
+  }
   if(!guardedActions.has(name))return rpc(name,args,...rest);
   const expected={};
-  for(const [k,row] of cache)if(k.startsWith("docks:")){const baseline=pins.get(k)||row;if(baseline.edit_revision!=null)expected[row.id]=baseline.edit_revision;}
+  for(const [k,row] of cache)if(k.startsWith("docks:")){const baseline=pins.get(k)||interaction.get(k)||row;if(baseline.edit_revision!=null)expected[row.id]=baseline.edit_revision;}
   const started=performance.now(),r=await rpc("guarded_dock_action",{p_action:name,p_args:args,p_expected:expected});
   stats.saves.push(performance.now()-started);if(stats.saves.length>100)stats.saves.shift();
   if(r.error)return r;
@@ -139,6 +154,13 @@ function openMetrics(){
  p.style.whiteSpace="pre-wrap";p.textContent="Average save round trip: "+mean(stats.saves)+"\nAverage server-to-browser event delay (estimated): "+mean(stats.sync)+"\n\n"+[...stats.connections].map(([name,status])=>name+": "+status).join("\n")+"\n\nEvent delay depends on computer clock accuracy and excludes the sender's save time. These are samples from this tab.";
  const close=document.createElement("button");close.textContent="Close";close.onclick=()=>d.close();d.append(h,p,close);document.body.append(d);d.onclose=()=>d.remove();d.showModal();
 }
+function beginInteraction(event){
+ if(!event.target.closest?.(".card,.slot-status-block,.dock-button,.dock-hidden-bar,.dock-trailer-target"))return;
+ interaction.clear();for(const [k,row] of cache)interaction.set(k,{...row});
+}
+document.addEventListener("pointerdown",beginInteraction,true);
+document.addEventListener("dragstart",beginInteraction,true);
+for(const type of ["pointerup","pointercancel","dragend"])document.addEventListener(type,()=>setTimeout(()=>interaction.clear(),0),true);
 document.addEventListener("DOMContentLoaded",()=>{
  const style=document.createElement("style");style.textContent='.edit-review{width:min(880px,94vw);max-height:85vh;overflow:auto;border:1px solid var(--border,var(--line,#64748b));border-radius:14px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212b)}.edit-review::backdrop{background:#0009}.edit-review pre{white-space:pre-wrap;overflow-wrap:break-word;font:12px/1.5 monospace}.edit-review button{margin:5px;padding:7px 12px}.edit-review article{border-bottom:1px solid #8886;padding:12px 0}.edit-review article div{font-size:12px;opacity:.8}';document.head.append(style);
  const anchor=document.querySelector(".topbar-actions,.topbar .user-session,.user-session,.topbar");
