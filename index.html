@@ -521,6 +521,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <script src="chat-typing.js?v=20261014"></script>
 <script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="edit-guard.js?v=20261016"></script>
 <script src="access-control.js?v=20261014-short-names"></script>
 <script>
 (async()=>{
@@ -1182,6 +1183,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function openBatchModal(){if(!access.can("batch_updates"))return;
       const selected=[...batchSelectedDockIds].map(id=>docks.get(id)).filter(Boolean);
       if(selected.length<2){clearBatchSelection();return}
+      selected.forEach(d=>window.EditGuard?.pin("docks",d));
       selected.sort((a,b)=>a.building-b.building||a.side.localeCompare(b.side)||a.dock_number-b.dock_number);
       batchSubtitle.textContent=`${selected.length} docks selected / ${selected.length} puertas seleccionadas`;
       batchSelectedList.textContent=selected.map(d=>dockLabel(d)).join(" · ");
@@ -1190,6 +1192,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       renderBatchStatusChoices();renderBatchInstructionChoices();batchBackdrop.classList.remove("hidden");
     }
     function closeBatchModal(clearSelection=true){
+      window.EditGuard?.unpin('docks');
       batchBackdrop.classList.add("hidden");batchStatusValue="";batchCustomText.value="";batchCustomWrap.classList.add("hidden");
       batchInstructionValue="";batchMoveBuilding=null;batchClearInstruction=false;batchMessage.textContent="";
       if(clearSelection)clearBatchSelection();
@@ -1686,6 +1689,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     }
     function openDock(id){if(!access.can("update_status")&&!access.can("request_moves")&&!access.can("hide_docks"))return;
       selectedDockId=id;selectedMoveBuilding=null;const d=docks.get(id);
+      window.EditGuard?.unpin("docks");window.EditGuard?.pin("docks",d);
       releaseTrailerButton.classList.toggle("hidden",!d.trailer_number||!access.can("update_status"));
       releaseTrailerButton.textContent=`Release ${d.trailer_number||"Trailer"} / Liberar remolque`;
       initialStatus=normalizedStatus(d.status);
@@ -1704,7 +1708,12 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       refreshCurrentMoveDisplay(d);
       actionBackdrop.classList.remove("hidden")
     }
-    function closeModal(){actionBackdrop.classList.add("hidden");selectedDockId=null;selectedMoveBuilding=null;pendingMove=null;initialStatus=null;initialCustomStatusText="";customStatusText.value="";customStatusWrap.classList.add("hidden")}
+    document.addEventListener("edit-load-latest",event=>{
+      if(event.detail.table!=="docks")return;
+      for(const row of event.detail.rows)docks.set(row.id,row);
+      renderEverything();if(selectedDockId)openDock(selectedDockId);
+    });
+    function closeModal(){window.EditGuard?.unpin("docks");actionBackdrop.classList.add("hidden");selectedDockId=null;selectedMoveBuilding=null;pendingMove=null;initialStatus=null;initialCustomStatusText="";customStatusText.value="";customStatusWrap.classList.add("hidden")}
     function togglePanel(which){
       if(which==="status")statusPanel.classList.toggle("hidden");
       else movePanel.classList.toggle("hidden")
@@ -2192,7 +2201,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       renderChangedDockRows([previous,row]);
       if(!previous||previous.trailer_number!==row.trailer_number||payload.eventType==='DELETE')renderTrailerLists();
       renderTrailerPicker();
-      if(selectedDockId===row.id&&payload.eventType!=="DELETE")openDock(row.id);
+      if(selectedDockId===row.id&&payload.eventType!=="DELETE"){modalMessage.style.color="#b45309";modalMessage.textContent="This dock changed on another screen. Your draft is preserved; saving will check for a conflict.";}
     }
     function handleHistoryRealtime(payload){
       const row=payload.new||payload.old;
