@@ -2163,6 +2163,13 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     historyList.addEventListener("keydown",e=>{
       if((e.key==="Enter"||e.key===" ")&&e.target.matches(".activity-item.actionable")){e.preventDefault();const id=String(e.target.dataset.activityId);expandedActivityId=String(expandedActivityId??"")===id?null:id;renderHistory(historyItems)}
     });
+    function renderChangedDockRows(changed){
+      const ids=new Set(changed.filter(Boolean).map(d=>d.building===100?"b100":d.side==="Parking Lot"?"b200Parking":"b200Opposite"));
+      if(ids.has("b100"))renderRow("b100",rowDocks(100,"Parking Lot",false));
+      if(ids.has("b200Parking"))renderRow("b200Parking",rowDocks(200,"Parking Lot",true));
+      if(ids.has("b200Opposite"))renderRow("b200Opposite",rowDocks(200,"Opposite Side",false));
+      renderSummary();access.apply();
+    }
     function handleDockRealtime(payload){
       const row=payload.new||payload.old;if(!row)return;
       const previous=docks.get(row.id);
@@ -2182,7 +2189,8 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         docks.set(row.id,row);
       }
       if(soundKind)playSound(soundKind);
-      renderEverything();
+      renderChangedDockRows([previous,row]);
+      if(!previous||previous.trailer_number!==row.trailer_number||payload.eventType==='DELETE')renderTrailerLists();
       renderTrailerPicker();
       if(selectedDockId===row.id&&payload.eventType!=="DELETE")openDock(row.id);
     }
