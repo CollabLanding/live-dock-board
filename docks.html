@@ -25,7 +25,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <dialog id="editor"><div class="dialog-heading"><h2 id="editorTitle">Edit Dock</h2><button id="closeEditor" type="button" aria-label="Close">×</button></div><form id="dockForm"><div class="form-grid"><p id="dockInfo" class="muted"></p><label>Notes<textarea id="notes" maxlength="5000" placeholder="Add dock notes…"></textarea></label><label style="display:flex;align-items:center;gap:8px"><input id="isHidden" type="checkbox">Hide dock in Yard View</label></div><p id="editorMessage" class="notice" role="status"></p><div class="form-actions"><button id="cancelEditor" type="button">Cancel</button><button id="saveDock" class="primary">Save Dock</button></div></form></dialog>
 </main><script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="edit-guard.js?v=20261016-permissions"></script><script>
+<script src="edit-guard.js?v=20261016-summary-only"></script><script>
 const sb=window.supabase.createClient("https://wcbmyrtpmrwstbmkeqjt.supabase.co","sb_publishable_9N-bP0PF2xxO2XNFKy-rhQ_5e8cT3tN",{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
 window.YardAccountAuth=sb.auth;
 const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
