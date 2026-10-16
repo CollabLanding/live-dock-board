@@ -14,6 +14,29 @@ function applyFeatureControls(){
 }
 const key=(t,id)=>t+":"+id;
 function remember(table,rows){for(const row of Array.isArray(rows)?rows:[rows])if(row?.id&&row.edit_revision!=null){const k=key(table,row.id),old=cache.get(k);if(!old||Number(row.edit_revision)>=Number(old.edit_revision))cache.set(k,{...old,...row});}}
+const ownVersions=new Map();
+let writeTail=Promise.resolve();
+function enqueueWrite(task){const result=writeTail.then(task,task);writeTail=result.catch(()=>{});return result;}
+function acceptOwn(table,rows){
+ remember(table,rows);
+ for(const row of Array.isArray(rows)?rows:[rows]){
+  if(!row?.id||row.edit_revision==null)continue;
+  const k=key(table,row.id),rev=Number(row.edit_revision),prior=ownVersions.get(k);
+  if(!prior||rev>prior.to)ownVersions.set(k,{from:prior&&prior.to===rev-1?prior.from:rev-1,to:rev});
+  const known=cache.get(k);
+  if(Number(known?.edit_revision)!==rev)continue;
+  if(pins.has(k))pins.set(k,{...row});
+  if(interaction.has(k))interaction.set(k,{...row});
+ }
+}
+function rebaseOwn(expected,table){
+ const result={...expected};
+ for(const [id,value] of Object.entries(result)){
+  const k=table?key(table,id):id,own=ownVersions.get(k),known=cache.get(k);
+  if(own&&Number(value)>=own.from&&Number(value)<=own.to&&Number(known?.edit_revision)===own.to)result[id]=own.to;
+ }
+ return result;
+}
 function showConflict(table,current,patch){
  const d=document.createElement("dialog");d.className="edit-review";
  const h=document.createElement("h2");h.textContent="This record changed";
@@ -72,11 +95,16 @@ const originalCreate=window.supabase.createClient;
 window.supabase={...window.supabase,createClient(...args){
  const sb=originalCreate(...args);if(!client){client=sb;sb.auth.onAuthStateChange((_event,session)=>{
  const next=session?.user?.id||null;
- if(!next||next!==signedInUser){signedInUser=next;featureAccess={role:null,permissions:{}};applyFeatureControls();}
+ if(!next||next!==signedInUser){ownVersions.clear();pins.clear();interaction.clear();signedInUser=next;featureAccess={role:null,permissions:{}};applyFeatureControls();}
  });}
  const from=sb.from.bind(sb),channel=sb.channel.bind(sb),rpc=sb.rpc.bind(sb);
  const guardedActions=new Set(["set_docks_hidden","assign_dock_trailer","release_dock_trailer","complete_seal_check","respond_dock_activity","save_dock_details"]);
- sb.rpc=async(name,args,...rest)=>{
+ const processRpc=async(name,args,...rest)=>{
+  if(name==="guarded_edit"){
+   const r=await rpc(name,{...args,p_expected:rebaseOwn(args.p_expected,args.p_table)},...rest);
+   if(!r.error&&r.data?.ok)acceptOwn(args.p_table,r.data.rows);
+   return r;
+  }
   if(name==="get_dock_access"||name==="get_transfer_access"){
    const r=await rpc(name,args,...rest);
    featureAccess=r.error?{role:null,permissions:{}}:{role:r.data?.role||null,permissions:r.data?.permissions||{}};
@@ -90,7 +118,7 @@ window.supabase={...window.supabase,createClient(...args){
     if(r.data?.conflict){Object.values(r.data.current||{}).forEach(row=>remember(table,row));showConflict(table,r.data.current,args);}
     return {data:null,error:{message:r.data?.message||"Report edit not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
    }
-   remember(table,r.data.row);return {data:r.data.result,error:null};
+   acceptOwn(table,r.data.row);return {data:r.data.result,error:null};
   }
   if(["move_board_link_group","resize_board_link_group"].includes(name)){
    const expected={};for(const [k,row] of cache){const baseline=pins.get(k)||interaction.get(k)||row;if(baseline.edit_revision!=null)expected[k]=baseline.edit_revision;}
@@ -104,7 +132,7 @@ window.supabase={...window.supabase,createClient(...args){
     }
     return {data:null,error:{message:r.data?.message||"Board action not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
    }
-   remember("transfers",r.data.result?.jobs||[]);remember("transfer_slot_statuses",r.data.result?.statuses||[]);
+   acceptOwn("transfers",r.data.result?.jobs||[]);acceptOwn("transfer_slot_statuses",r.data.result?.statuses||[]);
    return {data:r.data.result,error:null};
   }
   if(!guardedActions.has(name))return rpc(name,args,...rest);
@@ -117,10 +145,12 @@ window.supabase={...window.supabase,createClient(...args){
    if(r.data?.conflict){Object.values(r.data.current||{}).forEach(row=>remember("docks",row));showConflict("docks",r.data.current,args);}
    return {data:null,error:{message:r.data?.message||"Dock action not applied.",code:r.data?.conflict?"EDIT_CONFLICT":"EDIT_REJECTED"}};
   }
-  remember("docks",r.data.rows);
+  acceptOwn("docks",r.data.rows);
   for(const row of r.data.rows||[])if(pins.has(key("docks",row.id)))pins.set(key("docks",row.id),row);
   return {data:r.data.result,error:null};
  };
+ const writeActions=new Set(["guarded_edit","save_summary_record","move_board_link_group","resize_board_link_group",...guardedActions]);
+ sb.rpc=(name,args,...rest)=>writeActions.has(name)?enqueueWrite(()=>processRpc(name,args,...rest)):processRpc(name,args,...rest);
  sb.from=table=>targets.has(table)?wrapBuilderWithClient(from(table),table,sb):from(table);
  sb.channel=(...args)=>{
   const ch=channel(...args),on=ch.on.bind(ch),subscribe=ch.subscribe.bind(ch);
