@@ -3,6 +3,15 @@
 const targets=new Set(["transfers","transfer_slot_statuses","docks"]);
 const cache=new Map(),pins=new Map(),interaction=new Map(),stats={saves:[],sync:[],connections:new Map()};
 let client=null,dialog=null,historyBefore=null,historyRows=[];
+let featureAccess={role:null,permissions:{}},signedInUser=null;
+const metricDialogs=new Set();
+const canFeature=key=>featureAccess.role==="Owner"||featureAccess.permissions?.[key]===true;
+function applyFeatureControls(){
+ document.querySelectorAll("[data-edit-history-control]").forEach(n=>n.hidden=!canFeature("edit_history"));
+ document.querySelectorAll("[data-live-connection-control]").forEach(n=>n.hidden=!canFeature("live_connection"));
+ if(!canFeature("edit_history")&&dialog?.open)dialog.close();
+ if(!canFeature("live_connection"))for(const d of metricDialogs)if(d.open)d.close();
+}
 const key=(t,id)=>t+":"+id;
 function remember(table,rows){for(const row of Array.isArray(rows)?rows:[rows])if(row?.id&&row.edit_revision!=null){const k=key(table,row.id),old=cache.get(k);if(!old||Number(row.edit_revision)>=Number(old.edit_revision))cache.set(k,{...old,...row});}}
 function showConflict(table,current,patch){
@@ -61,10 +70,18 @@ const clientFor=builder=>builderClients.get(builder);
 function wrapBuilderWithClient(builder,table,sb){builderClients.set(builder,sb);return wrapBuilder(builder,table)}
 const originalCreate=window.supabase.createClient;
 window.supabase={...window.supabase,createClient(...args){
- const sb=originalCreate(...args);if(!client)client=sb;
+ const sb=originalCreate(...args);if(!client){client=sb;sb.auth.onAuthStateChange((_event,session)=>{
+ const next=session?.user?.id||null;
+ if(!next||next!==signedInUser){signedInUser=next;featureAccess={role:null,permissions:{}};applyFeatureControls();}
+ });}
  const from=sb.from.bind(sb),channel=sb.channel.bind(sb),rpc=sb.rpc.bind(sb);
  const guardedActions=new Set(["set_docks_hidden","assign_dock_trailer","release_dock_trailer","complete_seal_check","respond_dock_activity","save_dock_details"]);
  sb.rpc=async(name,args,...rest)=>{
+  if(name==="get_dock_access"||name==="get_transfer_access"){
+   const r=await rpc(name,args,...rest);
+   featureAccess=r.error?{role:null,permissions:{}}:{role:r.data?.role||null,permissions:r.data?.permissions||{}};
+   applyFeatureControls();return r;
+  }
   if(name==="save_summary_record"&&!args.p_deleted){
    const table=args.p_type==="Job"?"transfers":"transfer_slot_statuses",k=key(table,args.p_id),row=pins.get(k)||cache.get(k);
    const r=await rpc("guarded_summary_edit",{p_args:args,p_expected:row?.edit_revision??null});
@@ -138,6 +155,7 @@ function renderHistory(){
  }));
 }
 async function loadHistory(reset=false){
+ if(!canFeature("edit_history"))return;
  if(reset){historyBefore=null;historyRows=[]}
  const status=dialog.querySelector("[data-history-status]");status.textContent="Loading…";
  let q=client.from("edit_attempts").select("*").order("id",{ascending:false}).limit(50);
@@ -148,7 +166,7 @@ async function loadHistory(reset=false){
  dialog.querySelector("[data-older]").disabled=r.data.length<50;
 }
 function openHistory(){
- if(!client)return;
+ if(!client||!canFeature("edit_history"))return;
  if(!dialog){
   dialog=document.createElement("dialog");dialog.className="edit-review";
   dialog.innerHTML='<h2>Edit history</h2><p>Applied changes, conflicts, and rejected submissions. Recording begins when this feature was enabled.</p><button type="button" data-refresh>Refresh</button><button type="button" data-close>Close</button><div data-history-status></div><div data-history></div><button type="button" data-older>Load older</button>';
@@ -160,11 +178,12 @@ function openHistory(){
  dialog.showModal();loadHistory(true);
 }
 function openMetrics(){
+ if(!canFeature("live_connection"))return;
  const d=document.createElement("dialog");d.className="edit-review";
  const h=document.createElement("h2");h.textContent="Live connection";
  const p=document.createElement("p"),mean=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length)+" ms":"No samples yet";
  p.style.whiteSpace="pre-wrap";p.textContent="Average save round trip: "+mean(stats.saves)+"\nAverage server-to-browser event delay (estimated): "+mean(stats.sync)+"\n\n"+[...stats.connections].map(([name,status])=>name+": "+status).join("\n")+"\n\nEvent delay depends on computer clock accuracy and excludes the sender's save time. These are samples from this tab.";
- const close=document.createElement("button");close.textContent="Close";close.onclick=()=>d.close();d.append(h,p,close);document.body.append(d);d.onclose=()=>d.remove();d.showModal();
+ const close=document.createElement("button");close.textContent="Close";close.onclick=()=>d.close();d.append(h,p,close);document.body.append(d);metricDialogs.add(d);d.onclose=()=>{metricDialogs.delete(d);d.remove()};d.showModal();
 }
 function beginInteraction(event){
  if(!event.target.closest?.(".card,.slot-status-block,.dock-button,.dock-hidden-bar,.dock-trailer-target"))return;
@@ -177,7 +196,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  const style=document.createElement("style");style.textContent='.edit-review{width:min(880px,94vw);max-height:85vh;overflow:auto;border:1px solid var(--border,var(--line,#64748b));border-radius:14px;padding:20px;background:var(--panel,#fff);color:var(--text,#17212b)}.edit-review::backdrop{background:#0009}.edit-review pre{white-space:pre-wrap;overflow-wrap:break-word;font:12px/1.5 monospace}.edit-review button{margin:5px;padding:7px 12px}.edit-review article{border-bottom:1px solid #8886;padding:12px 0}.edit-review article div{font-size:12px;opacity:.8}';document.head.append(style);
  const anchor=document.querySelector(".topbar-actions,.topbar .user-session,.user-session,.topbar");
  if(!anchor)return;
- const history=document.createElement("button");history.type="button";history.className="secondary small";history.textContent="Edit history";history.onclick=openHistory;
- const metrics=history.cloneNode();metrics.textContent="Live connection";metrics.onclick=openMetrics;anchor.append(history,metrics);
+ const history=document.createElement("button");history.type="button";history.className="secondary small";history.textContent="Edit history";history.dataset.editHistoryControl="";history.dataset.permission="edit_history";history.hidden=true;history.onclick=openHistory;
+ const metrics=history.cloneNode();delete metrics.dataset.editHistoryControl;metrics.dataset.liveConnectionControl="";metrics.dataset.permission="live_connection";metrics.textContent="Live connection";metrics.onclick=openMetrics;anchor.append(history,metrics);applyFeatureControls();
 });
 })();
