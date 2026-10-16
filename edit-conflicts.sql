@@ -147,3 +147,16 @@ begin
 end $fn$;
 revoke all on function public.guarded_dock_action(text,jsonb,jsonb) from public,anon;
 grant execute on function public.guarded_dock_action(text,jsonb,jsonb) to authenticated;
+
+
+create or replace function edit_private.audit_applied() returns trigger language plpgsql security definer set search_path='' as $fn$
+declare before_row jsonb;after_row jsonb;patch jsonb;rid uuid;
+begin
+ before_row:=case when tg_op='INSERT' then '{}'::jsonb else to_jsonb(old) end;
+ after_row:=case when tg_op='DELETE' then '{}'::jsonb else to_jsonb(new) end;
+ rid:=coalesce((after_row->>'id')::uuid,(before_row->>'id')::uuid);
+ select coalesce(jsonb_object_agg(key,value),'{}') into patch from jsonb_each(after_row)
+ where value is distinct from before_row->key and key not in ('edit_revision','updated_at','updated_by','updated_by_email');
+ perform edit_private.record_attempt(tg_table_name,rid,'applied',lower(tg_op),(before_row->>'edit_revision')::bigint,(after_row->>'edit_revision')::bigint,patch,case when tg_op='DELETE' then before_row else after_row end,null);
+ if tg_op='DELETE' then return old;end if;return new;
+end $fn$;
