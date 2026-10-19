@@ -13,6 +13,7 @@ function dockList(numbers,es){
 }
 function describeRequest(r,lang){
  const es=lang==="es",source=es?"edificio "+r.building+", puerta "+r.dock_number:"Building "+r.building+", Dock "+r.dock_number;
+ if(r.kind==="Need An Empty")return es?"Se necesita un remolque vacío en "+source+".":"Empty trailer needed at "+source+".";
  if(r.kind==="Adjust")return es?"Ajustar remolque en "+source+".":"Adjust trailer at "+source+".";
  if(r.kind==="Seal Check")return es?"Revisión de sello solicitada en "+source+".":"Seal check requested at "+source+".";
  if(r.kind!=="Move")return "";
@@ -47,22 +48,26 @@ function assignment(h){
 async function receive(payload){
  const h=payload.new;if(!h?.id||seen.has(String(h.id)))return;
  seen.add(String(h.id));if(seen.size>2000)seen.delete(seen.values().next().value);
- if(!enabled||!armed||!account||!assignment(h)||h.activity_status==="Done")return;
+ const needsEmpty=h.new_status==="Need An Empty"&&h.old_status!=="Need An Empty";
+ if(!enabled||!armed||!account||(!assignment(h)&&!needsEmpty)||h.activity_status==="Done")return;
  // Ignore an INSERT that merely replays or resurfaces an older request.
  if(payload.commit_timestamp&&h.changed_at&&Date.parse(payload.commit_timestamp)-Date.parse(h.changed_at)>30000)return;
  const token=generation;
  const timer=setTimeout(async()=>{
   timers.delete(timer);if(token!==generation||!armed||!enabled||!account)return;
   try{
-   const r=await client.from("docks").select("id,instruction_type,move_to_building,move_to_dock_number,move_to_group").eq("id",h.dock_id).single();if(r.error||!r.data||token!==generation)return;
+   const r=await client.from("docks").select("id,status,instruction_type,move_to_building,move_to_dock_number,move_to_group").eq("id",h.dock_id).single();if(r.error||!r.data||token!==generation)return;
    const d=r.data,kind=h.new_instruction_type||(h.new_move_to_building?"Move":null);
-   if(d.instruction_type!==kind||d.move_to_building!==h.new_move_to_building||d.move_to_dock_number!==h.new_move_to_dock_number||JSON.stringify(d.move_to_group||null)!==JSON.stringify(h.new_move_to_group||null))return;
+   const activeMove=assignment(h)&&d.instruction_type===kind&&d.move_to_building===h.new_move_to_building&&d.move_to_dock_number===h.new_move_to_dock_number&&JSON.stringify(d.move_to_group||null)===JSON.stringify(h.new_move_to_group||null);
+   const activeEmpty=needsEmpty&&d.status==="Need An Empty";
+   if(!activeMove&&!activeEmpty)return;
    let groupDocks=null;
-   if(h.new_move_to_group?.dock_ids?.length){
+   if(activeMove&&h.new_move_to_group?.dock_ids?.length){
     const groups=await client.from("docks").select("dock_number").in("id",h.new_move_to_group.dock_ids);if(groups.error)return;groupDocks=groups.data.map(x=>x.dock_number);
    }
    if(token!==generation||!armed||!enabled||!account)return;
-   pending.push({kind,building:h.building,dock_number:h.dock_number,destinationBuilding:h.new_move_to_building,destinationDock:h.new_move_to_dock_number,groupDocks});pump();
+   if(activeEmpty)pending.push({kind:"Need An Empty",building:h.building,dock_number:h.dock_number});
+   if(activeMove)pending.push({kind,building:h.building,dock_number:h.dock_number,destinationBuilding:h.new_move_to_building,destinationDock:h.new_move_to_dock_number,groupDocks});pump();
   }catch(e){console.warn("Voice announcement unavailable",e)}
  },300);timers.add(timer);
 }
