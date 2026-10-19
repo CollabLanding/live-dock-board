@@ -1,7 +1,8 @@
 (()=>{
 "use strict";
 const synth=window.speechSynthesis,supported=!!(synth&&window.SpeechSynthesisUtterance);
-const ENABLED="yard-voice-enabled-v1",LANG="yard-voice-language-v1";
+const ENABLED="yard-voice-enabled-v1",LANG="yard-voice-language-v1",VOICE="yard-voice-selection-v1";
+let chosenVoices={};try{chosenVoices=JSON.parse(localStorage.getItem(VOICE)||"{}")||{}}catch{}
 let enabled=false,armed=false,language=window.SiteLanguage?.current==="es"?"es":"en",client=null,channel=null,account=null,generation=0,pending=[],speaking=false,current=null;
 const seen=new Set(),timers=new Set();
 try{enabled=localStorage.getItem(ENABLED)==="true";language=localStorage.getItem(LANG)||window.SiteLanguage?.current||localStorage.getItem("operations-ui-language")||language}catch{}
@@ -23,23 +24,45 @@ function describeRequest(r,lang){
  return es?"Mover desde "+source+" hacia "+destination+".":"Move from "+source+" to "+destination+".";
 }
 const controls=document.createElement("div");controls.className="voice-controls";controls.dataset.noTranslate="";
-controls.innerHTML='<button type="button" class="secondary small" data-voice-toggle aria-pressed="false"></button><select data-voice-language aria-label="Voice language"><option value="en">English</option><option value="es">Español</option></select><span class="voice-status" role="status" aria-live="polite"></span>';
+controls.innerHTML='<button type="button" class="secondary small" data-voice-open aria-haspopup="dialog" aria-controls="dockVoiceOptions">Voice</button>';
 const host=document.querySelector(".topbar-actions");if(host)host.insertBefore(controls,document.getElementById("userEmail")||document.getElementById("userLabel"));
-const toggle=controls.querySelector("[data-voice-toggle]"),picker=controls.querySelector("[data-voice-language]"),status=controls.querySelector(".voice-status");
-function render(){toggle.disabled=!supported;picker.disabled=!supported;picker.value=language;toggle.setAttribute("aria-pressed",String(enabled&&armed));toggle.textContent=!supported?"Voice unavailable":armed&&enabled?"Voice On":"Enable Voice";toggle.title=armed&&enabled?"Turn off voice announcements":"Enable spoken dock requests on this device";status.textContent=enabled&&!armed&&supported?"Click to enable":""}
+const dialog=document.createElement("dialog");dialog.id="dockVoiceOptions";dialog.className="dock-voice-dialog";dialog.dataset.noTranslate="";
+dialog.setAttribute("aria-labelledby","dockVoiceTitle");
+dialog.innerHTML='<div class="dock-voice-heading"><h2 id="dockVoiceTitle">Voice</h2><button type="button" data-voice-close aria-label="Close voice options">×</button></div><button type="button" class="secondary" data-voice-toggle aria-pressed="false"></button><label>Language<select data-voice-language><option value="en">English</option><option value="es">Español</option></select></label><label>Device Voice<select data-device-voice aria-label="Device voice"></select></label><button type="button" class="secondary" data-voice-preview>Preview Voice</button><p class="voice-status" role="status" aria-live="polite"></p>';
+document.body.append(dialog);
+const toggle=dialog.querySelector("[data-voice-toggle]"),picker=dialog.querySelector("[data-voice-language]"),voicePicker=dialog.querySelector("[data-device-voice]"),preview=dialog.querySelector("[data-voice-preview]"),status=dialog.querySelector(".voice-status");
+function availableVoices(){return supported?synth.getVoices().filter(v=>v.lang.toLowerCase().startsWith(language)):[]}
+function loadVoices(){
+ voicePicker.replaceChildren(new Option("Device default",""));
+ for(const v of availableVoices())voicePicker.append(new Option(v.name+" ("+v.lang+")",v.voiceURI));
+ voicePicker.value=availableVoices().some(v=>v.voiceURI===chosenVoices[language])?chosenVoices[language]:"";
+}
+function render(){
+ toggle.disabled=!supported;picker.disabled=!supported;voicePicker.disabled=!supported;preview.disabled=!supported||speaking;picker.value=language;toggle.setAttribute("aria-pressed",String(enabled&&armed));
+ toggle.textContent=!supported?"Voice unavailable":armed&&enabled?"Turn Voice Off":"Enable Voice";
+ status.textContent=!supported?"Voice announcements are unavailable in this browser.":enabled&&!armed?"Click Enable Voice to activate announcements.":"";
+}
+controls.querySelector("[data-voice-open]").onclick=()=>{loadVoices();render();dialog.showModal()};
+dialog.querySelector("[data-voice-close]").onclick=()=>dialog.close();
+if(supported)synth.addEventListener?.("voiceschanged",loadVoices);
+voicePicker.onchange=()=>{chosenVoices[language]=voicePicker.value;try{localStorage.setItem(VOICE,JSON.stringify(chosenVoices))}catch{}};
+preview.onclick=()=>{
+ if(!supported||speaking)return;
+ speaking=true;render();utter(describeRequest({kind:"Move",building:100,dock_number:12,destinationBuilding:200,destinationDock:35},language),()=>{speaking=false;render();pump()});
+};
 function clear(){generation++;for(const t of timers)clearTimeout(t);timers.clear();pending=[];speaking=false;current=null;if(supported)synth.cancel()}
 function utter(text,done){
  const u=new SpeechSynthesisUtterance(text);u.lang=language==="es"?"es-MX":"en-US";
- const voices=synth.getVoices(),voice=voices.find(v=>v.lang===u.lang)||voices.find(v=>v.lang.toLowerCase().startsWith(language));if(voice)u.voice=voice;
+ const voices=availableVoices(),voice=voices.find(v=>v.voiceURI===chosenVoices[language])||voices.find(v=>v.lang===u.lang)||voices[0];if(voice){u.voice=voice;u.lang=voice.lang}
  const volume=Number(document.getElementById("soundVolume")?.value||.5);u.volume=Number.isFinite(volume)?Math.max(0,Math.min(1,volume)):.5;u.rate=1;
  current=u;u.onend=()=>{if(current!==u)return;current=null;done()};
- u.onerror=e=>{if(current!==u)return;current=null;if(e.error==="not-allowed"){armed=false;pending=[];speaking=false;render();status.textContent="Click Enable Voice to resume";return}done()};
+ u.onerror=e=>{if(current!==u)return;current=null;if(e.error==="not-allowed"){armed=false;pending=[];speaking=false;render();status.textContent="Open Voice and click Enable Voice to resume";return}done()};
  synth.speak(u);
 }
 function pump(){
  if(speaking||!pending.length||!enabled||!armed||!account)return;
- speaking=true;const item=pending.shift(),token=generation;
- utter(describeRequest(item,language),()=>{if(token!==generation)return;speaking=false;pump()});
+ speaking=true;render();const item=pending.shift(),token=generation;
+ utter(describeRequest(item,language),()=>{if(token!==generation)return;speaking=false;render();pump()});
 }
 function assignment(h){
  const old=h.old_instruction_type||(h.old_move_to_building?"Move":null),kind=h.new_instruction_type||(h.new_move_to_building?"Move":null);
@@ -74,10 +97,10 @@ async function receive(payload){
 toggle.onclick=()=>{
  if(!supported)return;
  if(enabled&&armed){enabled=false;armed=false;clear()}
- else{clear();enabled=true;armed=true;utter(language==="es"?"Anuncios de voz activados.":"Voice announcements on.",()=>pump())}
+ else{clear();enabled=true;armed=true;speaking=true;utter(language==="es"?"Anuncios de voz activados.":"Voice announcements on.",()=>{speaking=false;render();pump()})}
  try{localStorage.setItem(ENABLED,String(enabled))}catch{}render();
 };
-picker.onchange=()=>{language=picker.value==="es"?"es":"en";try{localStorage.setItem(LANG,language)}catch{}};
+picker.onchange=()=>{language=picker.value==="es"?"es":"en";try{localStorage.setItem(LANG,language)}catch{}loadVoices()};
 window.DockVoice={
  describeRequest,
  connect(sb,userId){
@@ -89,5 +112,5 @@ window.DockVoice={
  disconnect(){clear();if(channel&&client)client.removeChannel(channel);channel=null;account=null;seen.clear()},
  receive
 };
-window.addEventListener("pagehide",()=>clear());render();
+window.addEventListener("pagehide",()=>clear());loadVoices();render();
 })();
