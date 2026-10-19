@@ -30,3 +30,13 @@ html[data-theme="dark"] .topbar .connection-badge.offline{background:#3f1217;bor
 @media(max-width:720px){#boardScreen,body>main{padding:10px}.topbar{align-items:flex-start;flex-direction:column}}
 
 .voice-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.voice-controls select{width:auto;min-height:36px;padding:6px 8px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);font-size:12px}.voice-status{font-size:11px;color:var(--muted)}.voice-status:empty{display:none}
+
+.dock-voice-dialog{width:min(420px,calc(100vw - 24px));max-height:85vh;overflow:auto;box-sizing:border-box;border:1px solid var(--border);border-radius:14px;padding:22px;background:var(--panel);color:var(--text);font:14px Inter,system-ui,sans-serif}
+.dock-voice-dialog::backdrop{background:#0f172aa6}
+.dock-voice-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px}
+.dock-voice-heading h2{margin:0;font-size:20px}
+.dock-voice-heading button{border:0;background:transparent;color:var(--text);font-size:24px;padding:0 6px}
+.dock-voice-dialog label{display:grid;gap:7px;font-size:13px;font-weight:700;margin:18px 0}
+.dock-voice-dialog select{box-sizing:border-box;width:100%;min-height:40px;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--panel);color:var(--text);font:inherit}
+.dock-voice-dialog>.secondary{border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
+.dock-voice-dialog .voice-status{margin:12px 0 0;min-height:16px}
