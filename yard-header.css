@@ -28,3 +28,5 @@ html[data-theme="dark"] .topbar .secondary,html[data-theme="dark"] .topbar .soun
 html[data-theme="dark"] .topbar .connection-badge.live{background:#052e2b;border-color:#166534;color:#86efac}
 html[data-theme="dark"] .topbar .connection-badge.offline{background:#3f1217;border-color:#7f1d1d;color:#fecaca}
 @media(max-width:720px){#boardScreen,body>main{padding:10px}.topbar{align-items:flex-start;flex-direction:column}}
+
+.voice-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.voice-controls select{width:auto;min-height:36px;padding:6px 8px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);font-size:12px}.voice-status{font-size:11px;color:var(--muted)}.voice-status:empty{display:none}
