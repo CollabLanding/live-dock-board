@@ -20,7 +20,7 @@ function describeRequest(r,lang){
  if(r.kind!=="Move")return "";
  let destination=es?"edificio "+r.destinationBuilding:"Building "+r.destinationBuilding;
  if(r.destinationDock!=null)destination+=(es?", puerta ":", Dock ")+r.destinationDock;
- else if(r.groupDocks?.length)destination+=(es?", grupo de puertas ":", dock group ")+dockList(r.groupDocks,es);
+ else if(r.groupName)destination+=(es?", grupo ":", group ")+r.groupName;
  return es?"Mover desde "+source+" hacia "+destination+".":"Move from "+source+" to "+destination+".";
 }
 const controls=document.createElement("div");controls.className="voice-controls";controls.dataset.noTranslate="";
@@ -84,13 +84,10 @@ async function receive(payload){
    const activeMove=assignment(h)&&d.instruction_type===kind&&d.move_to_building===h.new_move_to_building&&d.move_to_dock_number===h.new_move_to_dock_number&&JSON.stringify(d.move_to_group||null)===JSON.stringify(h.new_move_to_group||null);
    const activeEmpty=needsEmpty&&d.status==="Need An Empty";
    if(!activeMove&&!activeEmpty)return;
-   let groupDocks=null;
-   if(activeMove&&h.new_move_to_group?.dock_ids?.length){
-    const groups=await client.from("docks").select("dock_number").in("id",h.new_move_to_group.dock_ids);if(groups.error)return;groupDocks=groups.data.map(x=>x.dock_number);
-   }
+   const groupName=h.new_move_to_group?.title||null;
    if(token!==generation||!armed||!enabled||!account)return;
    if(activeEmpty)pending.push({kind:"Need An Empty",building:h.building,dock_number:h.dock_number});
-   if(activeMove)pending.push({kind,building:h.building,dock_number:h.dock_number,destinationBuilding:h.new_move_to_building,destinationDock:h.new_move_to_dock_number,groupDocks});pump();
+   if(activeMove)pending.push({kind,building:h.building,dock_number:h.dock_number,destinationBuilding:h.new_move_to_building,destinationDock:h.new_move_to_dock_number,groupName});pump();
   }catch(e){console.warn("Voice announcement unavailable",e)}
  },300);timers.add(timer);
 }
