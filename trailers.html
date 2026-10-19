@@ -41,7 +41,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <dialog id="editor"><div class="dialog-heading"><h2 id="editorTitle">Add Trailer</h2><button id="closeEditor" type="button" aria-label="Close">×</button></div><form id="trailerForm"><div class="form-grid"><div class="row"><label>Trailer Number<input id="number" required maxlength="30" pattern="[A-Za-z0-9-]+" autocomplete="off"></label><label>Group<select id="category"><option>Active</option><option>Storage</option></select></label></div><label>Storage Label<input id="locationLabel" maxlength="80" placeholder="e.g. Allen Storage"></label><label>Notes<textarea id="notes" maxlength="5000" placeholder="Add trailer notes…"></textarea></label></div><p id="editorMessage" class="notice" role="status"></p><div class="form-actions"><button id="cancelEditor" type="button">Cancel</button><button id="saveTrailer" class="primary">Save Trailer</button></div></form></dialog>
 </main><script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="dock-voice.js?v=20261019-voice-options"></script>
+<script src="dock-voice.js?v=20261019-group-names"></script>
 <script src="edit-guard.js?v=20261016-rapid-saves"></script><script>
 const sb=window.supabase.createClient("https://wcbmyrtpmrwstbmkeqjt.supabase.co","sb_publishable_9N-bP0PF2xxO2XNFKy-rhQ_5e8cT3tN",{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}});
 window.YardAccountAuth=sb.auth;
