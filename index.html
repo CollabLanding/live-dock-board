@@ -259,7 +259,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <script src="word-fit.js?v=20261014" defer></script>
 <script src="popup-dismiss.js?v=20261016" defer></script>
 <script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261016-password-link" defer></script>
-<link rel="stylesheet" href="yard-header.css?v=20261016">
+<link rel="stylesheet" href="yard-header.css?v=20261019-voice">
 </head>
 <body>
 <div id="app">
@@ -524,6 +524,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <script src="chat-typing.js?v=20261014"></script>
 <script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="dock-voice.js?v=20261019"></script>
 <script src="edit-guard.js?v=20261016-rapid-saves"></script>
 <script src="access-control.js?v=20261014-short-names"></script>
 <script>
@@ -2244,6 +2245,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       if(payload.eventType==="INSERT"&&payload.new)upsertChatMessage(payload.new);
     }
     function subscribeRealtime(){
+      window.DockVoice?.connect(supabase,currentUser.id);
       if(groupChannel)supabase.removeChannel(groupChannel);groupChannel=supabase.channel("dock-groups-live").on("postgres_changes",{event:"*",schema:"public",table:"dock_groups"},()=>loadDockGroups().catch(console.error)).subscribe();
       if(dockChannel)supabase.removeChannel(dockChannel);if(historyChannel)supabase.removeChannel(historyChannel);if(chatChannel)supabase.removeChannel(chatChannel);
       if(trailerCatalogChannel)supabase.removeChannel(trailerCatalogChannel);
@@ -2336,7 +2338,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       try{if(presenceChannel)await presenceChannel.untrack()}catch(_err){}
       for(const channel of [dockChannel,historyChannel,chatChannel,presenceChannel,trailerActivityChannel,trailerCatalogChannel]){if(channel)supabase.removeChannel(channel)}
       dockChannel=null;historyChannel=null;chatChannel=null;presenceChannel=null;trailerActivityChannel=null;trailerCatalogChannel=null;clearTimeout(trailerCatalogTimer);clearTimeout(trailerActivityTimer);trailerActivityLoadVersion++;
-      await supabase.auth.signOut();groupLoadVersion++;dockGroups=[];if(groupChannel){await supabase.removeChannel(groupChannel);groupChannel=null}currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];chatMessages=[];warnedMoveKeys.clear();remindedMoveKeys.clear();pendingLocalActivitySounds.clear();pendingSealCompletionDockIds.clear();
+      window.DockVoice?.disconnect();await supabase.auth.signOut();groupLoadVersion++;dockGroups=[];if(groupChannel){await supabase.removeChannel(groupChannel);groupChannel=null}currentUser=null;docks.clear();activityIndicators.clear();activityStatusCache.clear();activityIndicatorRows=[];chatMessages=[];warnedMoveKeys.clear();remindedMoveKeys.clear();pendingLocalActivitySounds.clear();pendingSealCompletionDockIds.clear();
       activeUsersCount.textContent="0";activeUsersList.innerHTML='<div class="active-empty">Not signed in</div>';renderChat();
       if(doneExpiryTimer)clearTimeout(doneExpiryTimer);if(moveFadeTimer)clearInterval(moveFadeTimer);moveFadeTimer=null;showLogin()
     });
