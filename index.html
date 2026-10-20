@@ -329,19 +329,19 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
               <span id="activitySearchCount" class="activity-search-count"></span>
             </div>
           </div>
-          <p id="historyRangeNote">Last 12 hours · scroll to the bottom for the previous 12 hours</p>
+          <p id="historyRangeNote" hidden></p>
         </div>
         <div id="historyList" class="activity-list"></div>
       </section>
 
 
       <section class="panel trailer-history-panel" aria-labelledby="trailerActivityTitle">
-        <div class="section-heading"><div><h2 id="trailerActivityTitle">Trailer Activity</h2><p>Attachments and releases</p></div></div>
+        <div class="section-heading"><div><h2 id="trailerActivityTitle">Trailer Activity</h2></div></div>
         <div id="trailerActivityList" class="activity-list" aria-live="polite"><div class="activity-empty">No trailer activity yet.</div></div>
       </section>
 
       <section class="panel chat-panel">
-        <div class="section-heading"><div><h2>Team Chat</h2><p>Messages are shared live with signed-in users</p></div></div>
+        <div class="section-heading"><div><h2>Team Chat</h2></div></div>
         <div id="chatList" class="chat-list" aria-live="polite"></div>
         <div id="chatNote" class="chat-note" aria-live="polite"></div>
         <form id="chatForm" class="chat-form">
@@ -962,7 +962,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         const startMs=historyAnchorMs-(historyLoadedWindows*HISTORY_WINDOW_MS);
         const data=await fetchHistoryRange(startMs,historyAnchorMs);
         const previousMatchId=historySearchIndex>=0?historySearchIds[historySearchIndex]:null;
-        historyItems=data;
+        historyItems=visibleHistory(data);
         for(const h of historyItems)activityStatusCache.set(h.id,h.activity_status||null);
         historyHasMore=await checkOlderHistory(startMs);
         historyRangeNote.textContent=`Last ${historyLoadedWindows*12} hours loaded${historyHasMore?" · scroll to the bottom for the previous 12 hours":""}`;
@@ -2037,6 +2037,19 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       scrollToSearchMatch(0,"smooth");
     }
 
+    function visibleHistory(items){
+      const completions=items.filter(h=>h.activity_status==="Done"&&h.activity_status_changed_at).map(h=>({
+        id:String(h.id),at:Date.parse(h.activity_status_changed_at),
+        actor:h.activity_status_changed_by||h.activity_status_changed_by_email,
+        source:h.building+"|"+h.dock_number,
+        destination:h.new_move_to_building!=null&&h.new_move_to_dock_number!=null?h.new_move_to_building+"|"+h.new_move_to_dock_number:null
+      }));
+      return items.filter(h=>{
+        if(h.activity_status==="Done")return true;
+        const at=Date.parse(h.changed_at),actor=h.changed_by||h.changed_by_email,dock=h.building+"|"+h.dock_number;
+        return !completions.some(done=>done.id!==String(h.id)&&done.actor&&actor===done.actor&&at===done.at&&(dock===done.source||dock===done.destination));
+      });
+    }
     function renderHistory(items){
       if(!items.length){historyList.innerHTML='<div class="activity-empty">No activity yet.</div>';return}
       historyList.innerHTML=items.map(h=>{
@@ -2057,7 +2070,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         const requestAssignment=isInstructionAssignment(h);
         const requestType=historyInstructionType(h,"new");
         const sealCheck=requestAssignment&&requestType==="Seal Check";
-        const actionable=requestAssignment&&!sealCheck&&access.can("respond_moves");
+        const completed=h.activity_status==="Done";
+        if(completed){parts.length=0;parts.push(safe((requestType||"Request")+" completed")+(requestType==="Move"?" → "+safe(historyMoveLabel(h.new_move_to_building,h.new_move_to_dock_number))+(h.new_move_to_group?" · "+safe(h.new_move_to_group.title):""):""));}
+        const actionable=requestAssignment&&!sealCheck&&!completed&&access.can("respond_moves");
         const meta=ACTIVITY_META[h.activity_status],expanded=String(expandedActivityId??"")===String(h.id);
         const badge=meta?`<span class="activity-response ${meta.badge}">${safe(h.activity_status)}</span>`:"";
         const controls=actionable?`<div class="activity-controls ${expanded?"":"hidden"}" data-controls-for="${h.id}">
@@ -2067,7 +2082,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         </div>`:"";
         const originalWho=h.changed_by_email?safe(userName(h.changed_by_email)):"Unknown user";
         const responseLine=h.activity_status
-          ? `<div class="time"><strong>${safe(h.activity_status)}</strong>: ${new Date(h.activity_status_changed_at||h.activity_last_at||h.changed_at).toLocaleString()} · ${h.activity_status_changed_by_email?safe(userName(h.activity_status_changed_by_email)):"Unknown user"}</div>`
+          ? `<div class="time"><strong>${completed?"Completed":safe(h.activity_status)}</strong>: ${new Date(h.activity_status_changed_at||h.activity_last_at||h.changed_at).toLocaleString()} · ${h.activity_status_changed_by_email?safe(userName(h.activity_status_changed_by_email)):"Unknown user"}</div>`
           : "";
         const hint=actionable&&!expanded
           ?`<button type="button" class="activity-hint activity-hint-button" data-toggle-activity="${h.id}">Click to update this request</button>`
@@ -2075,7 +2090,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
             ?'<div class="activity-hint">Complete Seal Check using the DONE button on the dock</div>'
             :"";
         return `<div class="activity-item ${actionable?"actionable":""}" data-activity-id="${h.id}" ${actionable?'tabindex="0" role="button"':''}>
-          <div class="activity-topline"><div class="activity-copy"><div><strong>Building ${h.building} Dock ${h.dock_number}</strong>: ${parts.join(" · ")}</div><div class="time">Created: ${new Date(h.changed_at).toLocaleString()} · ${originalWho}</div>${responseLine}${hint}</div>${badge}</div>${controls}</div>`
+          <div class="activity-topline"><div class="activity-copy"><div><strong>Building ${h.building} Dock ${h.dock_number}</strong>: ${parts.join(" · ")}</div>${completed?"":`<div class="time">Created: ${new Date(h.changed_at).toLocaleString()} · ${originalWho}</div>`}${responseLine}${hint}</div>${badge}</div>${controls}</div>`
       }).join("");
       if(activitySearch.value.trim()&&historySearchIds.length&&historySearchIndex>=0){
         const id=historySearchIds[historySearchIndex];
