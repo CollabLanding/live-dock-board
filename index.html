@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="dock-labels.js?v=20261023-walls"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0f172a" />
@@ -254,6 +255,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     .trailer-picker-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.trailer-picker-tools #trailerPickerSearch{flex:1;min-width:160px}
 
     *{overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+.dock-button.wall-slot .dock-number{font-size:14px}
 </style>
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 <script src="word-fit.js?v=20261014" defer></script>
@@ -524,7 +526,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <script src="chat-typing.js?v=20261014"></script>
 <script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="dock-voice.js?v=20261019-group-names"></script>
+<script src="dock-voice.js?v=20261023-wall-slots"></script>
 <script src="edit-guard.js?v=20261016-rapid-saves"></script>
 <script src="access-control.js?v=20261014-short-names"></script>
 <script>
@@ -879,7 +881,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function renderTrailerActivity(){
       trailerActivityList.innerHTML=trailerActivityRows.length?trailerActivityRows.map(row=>{
         const who=row.changed_by_email?userName(row.changed_by_email):"Unknown user";
-        return `<div class="activity-item"><div><strong>${safe(row.trailer_number)}</strong> · <span class="trailer-activity-action ${row.action==="Attached"?"attached":"released"}">${safe(row.action)}</span></div><div>Building ${row.building} · Dock ${row.dock_number}</div><div class="time">${new Date(row.changed_at).toLocaleString()} · ${safe(who)}</div></div>`;
+        return `<div class="activity-item"><div><strong>${safe(row.trailer_number)}</strong> · <span class="trailer-activity-action ${row.action==="Attached"?"attached":"released"}">${safe(row.action)}</span></div><div>Building ${row.building} · Dock ${dockNumber(row.dock_number,row.building)}</div><div class="time">${new Date(row.changed_at).toLocaleString()} · ${safe(who)}</div></div>`;
       }).join(""):'<div class="activity-empty">No trailer activity yet.</div>';
     }
     async function loadTrailerActivity(reset=true){
@@ -1029,7 +1031,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const delay=Math.max(250,Math.min(...expiries)-now+100);
       doneExpiryTimer=setTimeout(()=>{rebuildActivityIndicators();renderEverything()},delay);
     }
-    function rowDocks(building,side,asc=true){return [...docks.values()].filter(d=>d.building===building&&d.side===side).sort((a,b)=>asc?a.dock_number-b.dock_number:b.dock_number-a.dock_number)}
+    function rowDocks(building,side,asc=true){return [...docks.values()].filter(d=>d.building===building&&d.side===side).sort((a,b)=>asc?dockPosition(building,a.dock_number)-dockPosition(building,b.dock_number):dockPosition(building,b.dock_number)-dockPosition(building,a.dock_number))}
     const MOVE_FADE_MS=10*60*1000;
     function mixRgb(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
     function moveTimerElapsedMs(d,now=Date.now()){
@@ -1098,7 +1100,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         if([...docks.values()].some(d=>d.move_to_building&&d.move_instruction_at))renderEverything();
       },5000);
     }
-    function dockLabel(d){return `B${d.building} D${d.dock_number}`}
+    function dockLabel(d){return `B${d.building} D${dockNumber(d.dock_number,d.building)}`}
     function clearBatchSelection(render=true){
       batchSelectedDockIds.clear();
       if(render)renderEverything();
@@ -1304,7 +1306,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function renderDockGroupBar(){
       const bar=$("dockGroupBar");bar.replaceChildren();
       for(const group of dockGroups.filter(g=>Number(g.building)===selectedMoveBuilding)){
-        const b=document.createElement("button");b.type="button";b.textContent=group.title;b.classList.toggle("selected",pendingMove?.group?.id===group.id);b.setAttribute("aria-pressed",String(pendingMove?.group?.id===group.id));b.title=group.dock_ids.map(id=>docks.get(id)?.dock_number).filter(n=>n!=null).join(", ");
+        const b=document.createElement("button");b.type="button";b.textContent=group.title;b.classList.toggle("selected",pendingMove?.group?.id===group.id);b.setAttribute("aria-pressed",String(pendingMove?.group?.id===group.id));b.title=group.dock_ids.map(id=>{const d=docks.get(id);return d?dockNumber(d.dock_number,d.building):null}).filter(n=>n!=null).join(", ");
         b.onclick=()=>{pendingMove={type:"Move",building:selectedMoveBuilding,dock:null,group:{id:group.id,title:group.title,dock_ids:group.dock_ids},changed:true,clear:false};dockPicker.querySelectorAll(".dock-dest").forEach(n=>n.classList.remove("selected"));const buildingButton=selectedMoveBuilding===100?pick100:pick200;buildingButton.classList.remove("general-selected");buildingButton.textContent="Building / Edificio "+selectedMoveBuilding;renderDockGroupBar();modalMessage.textContent="Move → B"+selectedMoveBuilding+" · "+group.title;};bar.append(b);
       }
     }
@@ -1315,7 +1317,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function instructionLabel(type,building,dockNo){
       if(type==="Move"){
         if(!building)return "MOVE";
-        return `MOVE → B${building}${dockNo!=null?` D${dockNo}`:""}`;
+        return `MOVE → B${building}${dockNo!=null?` D${dockNumber(dockNo,building)}`:""}`;
       }
       if(type==="Adjust")return "ADJUST";
       if(type==="Seal Check")return "SEAL CHECK";
@@ -1451,7 +1453,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         item.draggable=access.can("update_status");
         item.classList.toggle("trailer-selected",selectedTrailerNumber===number);
         item.querySelector(".trailer-assignment-dot").classList.toggle("assigned",Boolean(dock));
-        const location=dock?`Assigned to Building ${dock.building}, Dock ${dock.dock_number}`:"Not assigned to a dock";
+        const location=dock?`Assigned to Building ${dock.building}, Dock ${dockNumber(dock.dock_number,dock.building)}`:"Not assigned to a dock";
         item.title=`${number} — ${location}${item.dataset.trailerNotes?" — "+item.dataset.trailerNotes:""}`;
         item.setAttribute("aria-label",item.title);
       });
@@ -1467,7 +1469,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const rows=trailerCatalog.filter(t=>[t.number,t.category,t.location_label,t.notes].join(" ").toLowerCase().includes(term));
       trailerPickerRows.innerHTML=rows.length?trailerPickerSort.sort(rows).map(t=>{
         const dock=[...docks.values()].find(d=>d.trailer_number===t.number),here=dock?.id===trailerPickerDockId;
-        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dock.dock_number}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
+        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
       }).join(""):'<tr><td colspan="6">No trailers found.</td></tr>';
     }
     function openTrailerPicker(dockId){
@@ -1475,7 +1477,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const dock=docks.get(dockId);if(!dock)return;
       selectedTrailerNumber=null;renderTrailerLists();
       trailerPickerDockId=dockId;trailerPickerSearch.value="";trailerPickerMessage.textContent="";
-      $("trailerPickerTitle").textContent=`Assign Trailer · Building ${dock.building} · Dock ${dock.dock_number}`;
+      $("trailerPickerTitle").textContent=`Assign Trailer · Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`;
       trailerPicker.showModal();renderTrailerPicker();trailerPickerSearch.focus();
     }
     $("clearTrailerPicker").addEventListener("click",async()=>{
@@ -1518,7 +1520,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const target=document.createElement("button"),number=String(d.trailer_number||"").trim();
       target.type="button";target.className="dock-trailer-target"+(number?" assigned":"");
       target.dataset.dockId=String(d.id);
-      target.title=number?`${number} — Building ${d.building}, Dock ${d.dock_number}`:`Click to assign or drop a trailer here — Building ${d.building}, Dock ${d.dock_number}`;
+      target.title=number?`${number} — Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)}`:`Click to assign or drop a trailer here — Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)}`;
       target.setAttribute("aria-label",target.title);
       target.innerHTML=`<i class="dock-trailer-dot" aria-hidden="true"></i>${number?`<span class="dock-trailer-number">${safe(number)}</span>`:""}`;
       target.addEventListener("pointerdown",e=>e.stopPropagation());
@@ -1547,7 +1549,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       note.className="dock-static-note";
       note.textContent=d.is_hidden?"":text;
       note.title=text;
-      if(text)note.setAttribute("aria-label",`Dock ${d.dock_number} note: ${text}`);
+      if(text)note.setAttribute("aria-label",`Dock ${dockNumber(d.dock_number,d.building)} note: ${text}`);
       cell.appendChild(note);
     }
     function renderRow(id,items){
@@ -1559,9 +1561,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           const bar=document.createElement("button");
           bar.type="button";
           bar.className="dock-hidden-bar";
-          bar.title=`Building ${d.building}, Dock ${d.dock_number} hidden — click to unhide`;
-          bar.setAttribute("aria-label",`Building ${d.building}, Dock ${d.dock_number} hidden. Click to unhide.`);
-          bar.innerHTML=`<span>${d.dock_number}</span>`;
+          bar.title=`Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)} hidden — click to unhide`;
+          bar.setAttribute("aria-label",`Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)} hidden. Click to unhide.`);
+          bar.innerHTML=`<span>${dockNumber(d.dock_number,d.building)}</span>`;
           bar.addEventListener("click",e=>{
             e.preventDefault();
             e.stopPropagation();
@@ -1578,12 +1580,12 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         const st=normalizedStatus(d.status),meta=STATUS_META[st]||STATUS_META["Open Dock"],indicator=activityIndicators.get(d.id),b=document.createElement("button");
         const requestType=activeInstructionType(d);
         const statusDisplay=st==="Custom"?(String(d.custom_status_text||"CUSTOM").trim()||"CUSTOM"):meta.short;
-        b.type="button";b.className=`dock-button ${meta.cls}${batchSelectedDockIds.has(d.id)?" batch-selected":""}${requestType?" has-request":""}${requestType==="Seal Check"?" has-seal-check":""}`;b.dataset.dockId=String(d.id);
+        b.type="button";b.className=`dock-button ${meta.cls}${batchSelectedDockIds.has(d.id)?" batch-selected":""}${requestType?" has-request":""}${requestType==="Seal Check"?" has-seal-check":""}`;b.dataset.dockId=String(d.id);if(d.building===200&&d.dock_number>=56&&d.dock_number<=58)b.classList.add("wall-slot");
         const moveAge=moveAgeStyle(d);
         if(moveAge){b.classList.add("move-aging");b.style.background=moveAge.background;b.style.color=moveAge.color}
         const flag=indicator?`<span class="dock-activity-flag ${indicator.flag}" title="${safe(indicator.status)}" aria-label="${safe(indicator.status)}"></span>`:"";
-        b.innerHTML=`${flag}<div class="dock-number">${d.dock_number}</div><div class="dock-status ${st==="Custom"?"custom-label":""}">${safe(statusDisplay)}</div>${moveLabel(d)?`<div class="dock-move">${safe(moveLabel(d))}</div>`:""}`;
-        b.setAttribute("aria-label",`Building ${d.building}, dock ${d.dock_number}, ${statusDisplay}${moveLabel(d)?", "+moveLabel(d)+(moveAge?`, timer ${moveAge.paused?"paused at ":""}${Math.floor(moveAge.minutes)} minutes`:""):""}${indicator?", activity "+indicator.status:""}`);
+        b.innerHTML=`${flag}<div class="dock-number">${dockNumber(d.dock_number,d.building)}</div><div class="dock-status ${st==="Custom"?"custom-label":""}">${safe(statusDisplay)}</div>${moveLabel(d)?`<div class="dock-move">${safe(moveLabel(d))}</div>`:""}`;
+        b.setAttribute("aria-label",`Building ${d.building}, dock ${dockNumber(d.dock_number,d.building)}, ${statusDisplay}${moveLabel(d)?", "+moveLabel(d)+(moveAge?`, timer ${moveAge.paused?"paused at ":""}${Math.floor(moveAge.minutes)} minutes`:""):""}${indicator?", activity "+indicator.status:""}`);
 
         b.addEventListener("pointerdown",e=>{
           // Drag-select is intentionally mouse-only so touch users keep normal
@@ -1629,7 +1631,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           done.className="seal-done-btn";
           done.textContent="DONE";
           done.title="Complete Seal Check and set this dock to Loaded";
-          done.setAttribute("aria-label",`Complete Seal Check for Building ${d.building}, Dock ${d.dock_number}`);
+          done.setAttribute("aria-label",`Complete Seal Check for Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)}`);
           done.addEventListener("click",e=>{
             e.preventDefault();
             e.stopPropagation();
@@ -1651,7 +1653,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     function formatMove(building,dockNo){
       if(!building)return "";
       return dockNo!=null
-        ?`Building / Edificio ${building}, Dock / Puerta ${dockNo}`
+        ?`Building / Edificio ${building}, Dock / Puerta ${dockNumber(dockNo,building)}`
         :`Building / Edificio ${building} (General)`;
     }
     function sameMove(aBuilding,aDock,bBuilding,bDock){
@@ -1709,7 +1711,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       initialCustomStatusText=String(d.custom_status_text||"");
       const currentInstructionType=activeInstructionType(d);
       pendingMove={type:currentInstructionType,building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),group:d.move_to_group||null,changed:false,clear:false};
-      actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${d.dock_number}`;
+      actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${dockNumber(d.dock_number,d.building)}`;
 
       statusSelect.value=initialStatus;
       renderStatusChoices();
@@ -1776,10 +1778,10 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       modalMessage.textContent="";
 
       const source=docks.get(selectedDockId);
-      const nums=[...new Set([...docks.values()].filter(d=>Number(d.building)===building).map(d=>Number(d.dock_number)))].sort((a,b)=>a-b);
+      const nums=[...new Set([...docks.values()].filter(d=>Number(d.building)===building).map(d=>Number(d.dock_number)))].sort((a,b)=>dockPosition(building,a)-dockPosition(building,b));
       nums.forEach(n=>{
         const dest=[...docks.values()].find(d=>d.building===building&&d.dock_number===n);if(!dest)return;
-        const b=document.createElement("button");b.type="button";b.className="dock-dest";b.textContent=n;
+        const b=document.createElement("button");b.type="button";b.className="dock-dest";b.textContent=dockNumber(n,building);
         const isSource=source&&dest.id===source.id;const occupied=normalizedStatus(dest.status)!=="Open Dock";
         if(isSource){b.classList.add("source");b.disabled=true;b.title="This is the current dock / Esta es la puerta actual"}
         else if(occupied){b.classList.add("occupied");b.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`}
@@ -1889,7 +1891,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 
     function historyMoveLabel(building,dockNo){
       if(!building)return "";
-      return dockNo!=null?`B${building} D${dockNo}`:`B${building} (General)`;
+      return dockNo!=null?`B${building} D${dockNumber(dockNo,building)}`:`B${building} (General)`;
     }
     function historyInstructionType(h,which){
       const explicit=h?.[`${which}_instruction_type`];
@@ -1914,7 +1916,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const oldS=normalizedStatus(h.old_status),newS=normalizedStatus(h.new_status);
       const oldCustom=String(h.old_custom_status_text||""),newCustom=String(h.new_custom_status_text||"");
       const fields=[
-        `building ${h.building}`,`b${h.building}`,`dock ${h.dock_number}`,`d${h.dock_number}`,
+        `building ${h.building}`,`b${h.building}`,`dock ${dockNumber(h.dock_number,h.building)}`,`d${dockNumber(h.dock_number,h.building)}`,
         oldS,newS,oldCustom,newCustom,
         historyMoveLabel(h.old_move_to_building,h.old_move_to_dock_number),
         historyMoveLabel(h.new_move_to_building,h.new_move_to_dock_number),
@@ -2090,7 +2092,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
             ?'<div class="activity-hint">Complete Seal Check using the DONE button on the dock</div>'
             :"";
         return `<div class="activity-item ${actionable?"actionable":""}" data-activity-id="${h.id}" ${actionable?'tabindex="0" role="button"':''}>
-          <div class="activity-topline"><div class="activity-copy"><div><strong>Building ${h.building} Dock ${h.dock_number}</strong>: ${parts.join(" · ")}</div>${completed?"":`<div class="time">Created: ${new Date(h.changed_at).toLocaleString()} · ${originalWho}</div>`}${responseLine}${hint}</div>${badge}</div>${controls}</div>`
+          <div class="activity-topline"><div class="activity-copy"><div><strong>Building ${h.building} Dock ${dockNumber(h.dock_number,h.building)}</strong>: ${parts.join(" · ")}</div>${completed?"":`<div class="time">Created: ${new Date(h.changed_at).toLocaleString()} · ${originalWho}</div>`}${responseLine}${hint}</div>${badge}</div>${controls}</div>`
       }).join("");
       if(activitySearch.value.trim()&&historySearchIds.length&&historySearchIndex>=0){
         const id=historySearchIds[historySearchIndex];
@@ -2132,7 +2134,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       const source=docks.get(activity.dock_id);
       const destinations=[...docks.values()]
         .filter(d=>Number(d.building)===building&&(!activity.new_move_to_group||activity.new_move_to_group.dock_ids.includes(d.id)))
-        .sort((a,b)=>Number(a.dock_number)-Number(b.dock_number));
+        .sort((a,b)=>dockPosition(a.building,a.dock_number)-dockPosition(b.building,b.dock_number));
 
       if(!destinations.length){
         moveCompletionMessage.style.color="#b91c1c";
@@ -2156,7 +2158,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
           button.disabled=true;
           button.title=`Currently / Actualmente ${STATUS_BILINGUAL[normalizedStatus(dest.status)]||dest.status}`;
         }else{
-          button.title=`Complete move at Dock ${dest.dock_number} / Completar movimiento en puerta ${dest.dock_number}`;
+          button.title=`Complete move at Dock ${dockNumber(dest.dock_number,dest.building)} / Completar movimiento en puerta ${dockNumber(dest.dock_number,dest.building)}`;
           button.addEventListener("click",()=>completeMoveFromPicker(dest));
         }
 
