@@ -13,13 +13,13 @@ function dockList(numbers,es){
  return parts.join(", ");
 }
 function describeRequest(r,lang){
- const es=lang==="es",source=es?"edificio "+r.building+", puerta "+r.dock_number:"Building "+r.building+", Dock "+r.dock_number;
+ const es=lang==="es",source=es?"edificio "+r.building+", puerta "+dockNumber(r.dock_number,r.building):"Building "+r.building+", Dock "+dockNumber(r.dock_number,r.building);
  if(r.kind==="Need An Empty")return es?"Se necesita un remolque vacío en "+source+".":"Empty trailer needed at "+source+".";
  if(r.kind==="Adjust")return es?"Ajustar remolque en "+source+".":"Adjust trailer at "+source+".";
  if(r.kind==="Seal Check")return es?"Revisión de sello solicitada en "+source+".":"Seal check requested at "+source+".";
  if(r.kind!=="Move")return "";
  let destination=es?"edificio "+r.destinationBuilding:"Building "+r.destinationBuilding;
- if(r.destinationDock!=null)destination+=(es?", puerta ":", Dock ")+r.destinationDock;
+ if(r.destinationDock!=null)destination+=(es?", puerta ":", Dock ")+dockNumber(r.destinationDock,r.destinationBuilding);
  else if(r.groupName)destination+=(es?", grupo ":", group ")+r.groupName;
  return es?"Mover desde "+source+" hacia "+destination+".":"Move from "+source+" to "+destination+".";
 }
