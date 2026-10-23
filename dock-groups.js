@@ -8,8 +8,8 @@ window.createDockGroupManager=function(sb,getDocks,isAdmin){
   const building=Number($("[data-building]").value),host=$("[data-docks]");host.replaceChildren();
   for(const n of [100,200]){
    const section=document.createElement("section"),h=document.createElement("h3"),grid=document.createElement("div");h.textContent="Building "+n;grid.className="group-dock-grid";
-   for(const dock of getDocks().filter(d=>Number(d.building)===n).sort((a,b)=>a.dock_number-b.dock_number)){
-    const b=document.createElement("button");b.type="button";b.textContent=dock.dock_number;b.disabled=saving||building!==n;b.className=selected.has(dock.id)?"selected":"";b.setAttribute("aria-pressed",String(selected.has(dock.id)));b.title="Building "+n+" · Dock "+dock.dock_number+" · "+dock.side;
+   for(const dock of getDocks().filter(d=>Number(d.building)===n).sort((a,b)=>dockPosition(a.building,a.dock_number)-dockPosition(b.building,b.dock_number))){
+    const b=document.createElement("button");b.type="button";b.textContent=dockNumber(dock.dock_number,dock.building);b.disabled=saving||building!==n;b.className=selected.has(dock.id)?"selected":"";b.setAttribute("aria-pressed",String(selected.has(dock.id)));b.title="Building "+n+" · Dock "+dockNumber(dock.dock_number,dock.building)+" · "+dock.side;
     b.onclick=()=>{if(selected.has(dock.id))selected.delete(dock.id);else selected.add(dock.id);draw();message(selected.size+" docks selected")};grid.append(b);
    }
    section.append(h,grid);host.append(section);
