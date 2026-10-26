@@ -98,7 +98,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 
 /* Header controls occupy the same space from the first paint on every page. */
 .topbar-actions>.sound-controls,.topbar-actions>.voice-controls{display:none}
-.topbar .connection-badge{box-sizing:border-box;width:128px;text-align:center;white-space:nowrap}
+.topbar .connection-badge{box-sizing:border-box;width:auto;flex:0 0 auto;text-align:center;white-space:nowrap}
 #authLoading{display:none!important}
 .notice:empty{display:none}
 
