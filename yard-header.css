@@ -91,3 +91,7 @@ html[data-theme="dark"] .chat-message,html[data-theme="dark"] .chat-form{border-
 html[data-theme="dark"] .chat-emoji-picker{background:#121920;border-color:#3d4955}
 html[data-theme="dark"] .chat-emoji:hover{background:#1b2731}
 html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
+
+/* Match Transfers spacing between the theme switch and account link. */
+.topbar-actions>.theme-switch+.user-email{margin-left:4px}
+@media(max-width:1180px){.topbar-actions>.theme-switch+.user-email{margin-left:-2px}}
