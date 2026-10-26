@@ -29,8 +29,11 @@
     body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
     button,input,select,textarea{font:inherit} button{cursor:pointer} .hidden{display:none!important}
     .auth-shell{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#0f172a,#1e293b)}
-    #authLoading{display:block;min-height:100vh;padding:16px;background:#10151b;color:#91a0ad;font-size:14px}
+    #authLoading{display:block;margin:12px 0;min-height:22px;color:var(--muted);font-size:14px;text-align:left}
     #authLoading p{margin:0;color:inherit}
+    #boardScreen.yard-loading .board-grid{display:none}
+    html:has(#boardScreen.yard-loading){background:#10151b}
+    body:has(#boardScreen.yard-loading){background:#10151b}
     .auth-card{width:min(420px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
     .brand-mark{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:900}
     .auth-card h1{margin:10px 0 5px}.auth-card p{margin:0 0 22px;color:var(--muted)}
@@ -267,7 +270,6 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </head>
 <body>
 <div id="app">
-  <div id="authLoading" class="auth-shell" role="status"><p>Loading Yard View…</p></div>
   <section id="loginScreen" class="auth-shell hidden">
     <div class="auth-card">
       <img class="company-logo login-company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="brand-mark">TB</div>
@@ -283,7 +285,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     </div>
   </section>
 
-  <main id="boardScreen" class="hidden">
+  <main id="boardScreen" class="yard-loading">
     <header class="topbar">
       <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html">Trailers</a><a id="dockDocksLink" hidden href="docks.html">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
@@ -299,6 +301,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       </div>
     </header>
     <div class="yard-page-content">
+    <div id="authLoading" role="status"><p>Loading Yard View…</p></div>
 
     <div class="board-grid">
       <div class="board-main">
@@ -652,7 +655,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     const userName=emailAddress=>String(emailAddress||"").split("@")[0]||"user";
     const setConnection=(text,mode="")=>{connectionBadge.textContent=text;connectionBadge.className="connection-badge"+(mode?` ${mode}`:"")};
     const showLogin=()=>{chatTyping.stop();$("authLoading").classList.add("hidden");loginScreen.classList.remove("hidden");boardScreen.classList.add("hidden")};
-    const showBoard=()=>{$("authLoading").classList.add("hidden");loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
+    const showBoard=()=>{boardScreen.classList.remove("yard-loading");$("authLoading").classList.add("hidden");loginScreen.classList.add("hidden");boardScreen.classList.remove("hidden")};
 
     function applyTheme(theme,save=true){
       currentTheme=theme==="dark"?"dark":"light";
@@ -2278,7 +2281,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();showBoard();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog(),loadDockGroups()]);seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog(),loadDockGroups()]);showBoard();seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
