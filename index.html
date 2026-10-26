@@ -367,7 +367,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 
 /* Header controls occupy the same space from the first paint on every page. */
 .topbar-actions>.sound-controls,.topbar-actions>.voice-controls{display:none}
-.topbar .connection-badge{box-sizing:border-box;width:128px;text-align:center;white-space:nowrap}
+.topbar .connection-badge{box-sizing:border-box;width:auto;flex:0 0 auto;text-align:center;white-space:nowrap}
 #authLoading{display:none!important}
 .notice:empty{display:none}
 
@@ -375,7 +375,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 .topbar .yard-nav-secondary[data-dock-denied="true"]{display:block!important;visibility:hidden;pointer-events:none}
 
 </style>
-<link rel="stylesheet" href="yard-header.css?v=20261026-preserve-transfer-link">
+<link rel="stylesheet" href="yard-header.css?v=20261026-compact-live">
 </head>
 <body>
 <div id="app">
@@ -396,7 +396,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 
   <main id="boardScreen" class="yard-loading">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261026-preserve-transfer-link" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261026-preserve-transfer-link">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261026-preserve-transfer-link">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261026-compact-live" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261026-compact-live">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261026-compact-live">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge"></span>
         <label class="theme-switch" for="themeToggle">
