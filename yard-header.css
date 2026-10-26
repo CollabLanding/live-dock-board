@@ -52,3 +52,6 @@ body .section-heading h2,body .active-users-heading h2{font-size:18px}
 .topbar-brand>.company-logo{width:54px!important;min-width:54px!important;max-width:54px!important;height:56px!important;flex-basis:54px!important}
 @media(max-width:900px){.topbar-brand>.company-logo{width:48px!important;min-width:48px!important;max-width:48px!important;height:50px!important;flex-basis:48px!important}}
 @media(max-width:720px){.topbar{margin-top:-10px}.topbar-brand{align-items:center}}
+
+/* Small alignment adjustment for the header brand and navigation. */
+.topbar-brand{position:relative;left:5px}
