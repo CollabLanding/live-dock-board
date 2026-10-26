@@ -40,3 +40,8 @@ html[data-theme="dark"] .topbar .connection-badge.offline{background:#3f1217;bor
 .dock-voice-dialog select{box-sizing:border-box;width:100%;min-height:40px;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--panel);color:var(--text);font:inherit}
 .dock-voice-dialog>.secondary{border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
 .dock-voice-dialog .voice-status{margin:12px 0 0;min-height:16px}
+
+/* Match title typography to the Transfers site. */
+body h1,body h2,body h3{font-family:Arial,sans-serif;font-weight:700;letter-spacing:normal}
+.topbar .yard-nav-primary a{font-family:Arial,sans-serif;font-size:24px;font-weight:800;line-height:1.15}
+body .section-heading h2,body .active-users-heading h2{font-size:18px}
