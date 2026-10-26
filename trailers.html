@@ -19,7 +19,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 </style><script src="word-fit.js?v=20261026-stable-nav" defer></script>
 <script src="popup-dismiss.js?v=20261016" defer></script>
 <script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261016-password-link" defer></script>
-<link rel="stylesheet" href="yard-header.css?v=20261026-stable-header">
+<link rel="stylesheet" href="yard-header.css?v=20261026-unified-header-shell">
 <script src="yard-header-controls.js?v=20261016" defer></script>
 </head><body><main>
     <header class="topbar">
@@ -36,10 +36,12 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         <button id="userLabel" class="user-email" type="button" aria-haspopup="dialog" aria-label="Account Options"></button><small id="dockRoleLabel"></small><button id="signOut" hidden class="secondary small">Sign out</button>
       </div>
     </header>
+    <div class="yard-page-content">
 <section id="loginPanel" class="panel login" hidden><h2>Sign in</h2><form id="loginForm" class="form-grid"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button class="primary">Sign in</button><p id="loginMessage" role="status"></p></form></section>
 <p id="pageMessage" class="notice" role="status">Loading trailers…</p>
 <section id="trailerPanel" class="panel" hidden><div class="toolbar"><input id="search" type="search" placeholder="Search trailers or notes…" aria-label="Search trailers"><span id="counts" class="counts"></span><button id="refresh" type="button">Refresh</button><button id="addTrailer" class="primary" type="button">Add Trailer</button></div><div class="scroll"><table><thead><tr><th data-sort="number">Trailer Number</th><th data-sort="category">Group</th><th data-sort="location_label">Storage Label</th><th data-sort="dock">Dock</th><th data-sort="notes">Notes</th><th>Actions</th></tr></thead><tbody id="trailerRows"></tbody></table></div></section>
 <dialog id="editor"><div class="dialog-heading"><h2 id="editorTitle">Add Trailer</h2><button id="closeEditor" type="button" aria-label="Close">×</button></div><form id="trailerForm"><div class="form-grid"><div class="row"><label>Trailer Number<input id="number" required maxlength="30" pattern="[A-Za-z0-9-]+" autocomplete="off"></label><label>Group<select id="category"><option>Active</option><option>Storage</option></select></label></div><label>Storage Label<input id="locationLabel" maxlength="80" placeholder="e.g. Allen Storage"></label><label>Notes<textarea id="notes" maxlength="5000" placeholder="Add trailer notes…"></textarea></label></div><p id="editorMessage" class="notice" role="status"></p><div class="form-actions"><button id="cancelEditor" type="button">Cancel</button><button id="saveTrailer" class="primary">Save Trailer</button></div></form></dialog>
+    </div>
 </main><script src="table-sort.js?v=20261013"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="dock-voice.js?v=20261023-wall-slots"></script>
