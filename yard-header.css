@@ -101,3 +101,6 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 .topbar .connection-badge{box-sizing:border-box;width:128px;text-align:center;white-space:nowrap}
 #authLoading{display:none!important}
 .notice:empty{display:none}
+
+/* Permission checks must not collapse either row of header navigation. */
+.topbar .yard-nav-secondary[data-dock-denied="true"]{display:block!important;visibility:hidden;pointer-events:none}
