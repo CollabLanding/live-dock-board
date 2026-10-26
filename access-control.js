@@ -7,7 +7,7 @@ window.createDockAccess=(sb,getUser)=>{
  document.body.appendChild(dialog);const $=id=>dialog.querySelector("#"+id);
  function apply(){
   const map={"#summaryCards,.dock-board-panel,.yard-label,.legend,.active-trailers-panel":"view_board",".dock-history-panel":"view_activity",".chat-panel":"chat","#clearChatHistory":"clear_chat",".active-users-panel":"active_users",".theme-switch":"theme",".sound-controls":"sounds",".topbar-page-link":"transfers_link","#statusToggle,#statusPanel,#batchStatusOptionGrid,#batchCustomWrap":"update_status","#moveToggle,#movePanel,#batchInstructionTypeGrid,#batchClearRequest,#batchMoveBuildingWrap":"request_moves","#hideDockButton,#hideBatchDocks":"hide_docks",".activity-response-btn,.seal-done-btn":"respond_moves"};
-  for(const [selector,key]of Object.entries(map))document.querySelectorAll(selector).forEach(node=>node.dataset.dockDenied=String(!can(key)));
+  for(const [selector,key]of Object.entries(map))document.querySelectorAll(selector).forEach(node=>{if(!role&&node.closest(".topbar"))return;node.dataset.dockDenied=String(!can(key))});
   document.querySelectorAll(".dock-hidden-bar").forEach(node=>node.disabled=!can("hide_docks"));
   document.querySelectorAll("#applyUpdate").forEach(node=>node.dataset.dockDenied=String(!can("update_status")&&!can("request_moves")));
   const link=document.getElementById("dockAccessLink");const allowed=isAdmin()&&(can("manage_users")||can("view_permissions"));if(link)link.hidden=!allowed;const top=document.getElementById("dockAccessTop");if(top)top.hidden=!allowed;const title=document.getElementById("dockActiveTitle");if(title)title.hidden=allowed;
