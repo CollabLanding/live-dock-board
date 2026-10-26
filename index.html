@@ -265,8 +265,8 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 <script src="word-fit.js?v=20261026-stable-nav" defer></script>
 <script src="popup-dismiss.js?v=20261016" defer></script>
-<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261026-audio-options" defer></script>
-<link rel="stylesheet" href="yard-header.css?v=20261026-account-spacing">
+<script src="site-language.js?v=20261014" defer></script><script src="yard-account.js?v=20261026-static-header" defer></script>
+<link rel="stylesheet" href="yard-header.css?v=20261026-static-header">
 </head>
 <body>
 <div id="app">
@@ -289,7 +289,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
     <header class="topbar">
       <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html">Trailers</a><a id="dockDocksLink" hidden href="docks.html">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
-        <span id="connectionBadge" class="connection-badge">Connecting…</span>
+        <span id="connectionBadge" class="connection-badge"></span>
         <label class="theme-switch" for="themeToggle">
           <span class="theme-label light-label">Light</span>
           <input id="themeToggle" type="checkbox" role="switch" aria-label="Toggle dark theme">
@@ -300,8 +300,9 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
         <button id="userEmail" class="user-email" type="button" aria-haspopup="dialog" aria-label="Account Options"></button><small id="dockRoleLabel"></small><button id="signOutBtn" class="secondary small">Sign out</button>
       </div>
     </header>
+<script>(()=>{try{const b=document.getElementById("userEmail")||document.getElementById("userLabel");b.textContent=sessionStorage.getItem("ltb-header-name")||"";const t=document.getElementById("themeToggle");t.checked=document.documentElement.dataset.theme==="dark";if(sessionStorage.getItem("ltb-header-admin")==="true")for(const id of ["dockTrailersLink","dockDocksLink"])document.getElementById(id).hidden=false;const badge=document.getElementById("connectionBadge"),saved=JSON.parse(sessionStorage.getItem("ltb-header-connection")||"null");if(saved){badge.textContent=saved.text;badge.className=saved.className}}catch{}})();</script>
     <div class="yard-page-content">
-    <div id="authLoading" role="status"><p>Loading Yard View…</p></div>
+    <div id="authLoading" role="status"><p></p></div>
 
     <div class="board-grid">
       <div class="board-main">
@@ -385,7 +386,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       <aside class="board-sidebar">
       <section class="panel active-users-panel" aria-label="Active users">
         <div class="active-users-heading"><h2><span id="dockActiveTitle">Active Users</span><a id="dockAccessLink" href="#user-access" hidden>Active Users</a></h2><span id="activeUsersCount" class="active-count">0</span></div>
-        <div id="activeUsersList" class="active-users-list"><div class="active-empty">Connecting…</div></div>
+        <div id="activeUsersList" class="active-users-list"><div class="active-empty"></div></div>
       </section>
       <section class="panel active-trailers-panel" aria-labelledby="activeTrailersTitle"><div class="active-users-heading"><h2 id="activeTrailersTitle">Active Trailers</h2><span class="active-count">27</span></div><ul class="active-trailers-list"><li>GPS5150</li><li>H08819</li><li>H15257</li><li>H15643</li><li>H15649</li><li>H15761</li><li>H15817</li><li>H15819</li><li>U85250</li><li>U98219</li><li>W00514</li><li>W02111</li><li>W04979</li><li>W10657</li><li>W23496</li><li>W23867</li><li>W24822</li><li>W25727</li><li>W83691</li><li>W84716</li><li>W84935</li><li>W85767</li><li>W86005</li><li>W87588</li><li>W92475</li><li>W99595</li><li>Y10505</li></ul></section>
       <section class="panel active-trailers-panel storage-trailers-panel" aria-labelledby="storageTrailersTitle"><div class="active-users-heading"><h2 id="storageTrailersTitle">Storage Trailers</h2><span class="active-count">14</span></div><ul class="active-trailers-list"><li><span>318420</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>H15645</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>H15827</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>U90770</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>U92344</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>U94421</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>U95524</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>W03511</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li>W43897</li><li><span>W45858</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li>W48970</li><li><span>Y10496</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>Y10509</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>Y10512</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li></ul></section>
@@ -2281,7 +2282,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
       chatChannel=supabase.channel("trailer-chat-live").on("postgres_changes",{event:"INSERT",schema:"public",table:"chat_messages"},handleChatRealtime).subscribe();
       subscribePresence();
     }
-    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("Connecting…");try{await access.refresh();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog(),loadDockGroups()]);showBoard();seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
+    async function init(user){currentUser=user;userEmail.dataset.accountEmail=user.email||"";userEmail.textContent=(user.email||"").split("@")[0];setConnection("");try{await access.refresh();await chatTyping.start(user);await Promise.all([loadDocks(),loadHistory(true),loadActivityIndicators(),loadChat(),loadTrailerActivity(),loadTrailerCatalog(),loadDockGroups()]);showBoard();seedExistingMoveWarnings();subscribeRealtime();checkMoveWarnings();startMoveFadeTimer()}catch(err){setConnection("Connection issue","offline");if(boardScreen.classList.contains("hidden"))showLogin();alert("Could not load trailer board: "+err.message)}}
 
     loginForm.addEventListener("submit",async e=>{
       e.preventDefault();unlockAudio();loginMessage.className="message";loginMessage.textContent="Signing in…";
