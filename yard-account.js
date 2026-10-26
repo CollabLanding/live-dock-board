@@ -8,7 +8,7 @@
  if(signOut){signOut.type="button";const actions=document.createElement("div");actions.style.marginTop="20px";actions.appendChild(signOut);dialog.appendChild(actions);}
  const audio=document.createElement("section");audio.className="yard-account-audio";audio.innerHTML="<h3>Sound & Voice</h3>";
  for(const selector of [".sound-controls",".voice-controls"]){const control=document.querySelector(".topbar-actions "+selector);if(control)audio.appendChild(control)}
- dialog.querySelector("#yardAccountLanguage").before(audio);
+ dialog.querySelector("#yardAccountLanguage").previousElementSibling.before(audio);
  window.SiteLanguage.mount(dialog.querySelector("#yardAccountLanguage"));
  button.addEventListener("click",()=>{if(!roleLabel)dialog.querySelector("#accountRole").textContent=button.dataset.accountRole||"";const email=button.dataset.accountEmail||button.textContent;dialog.querySelector("#accountUsername").textContent=email.split("@")[0];dialog.querySelector("#accountEmail").textContent=button.dataset.accountEmail||"";resetPassword();dialog.showModal();window.SiteLanguage.apply()});
  const form=dialog.querySelector("#yardPasswordForm"),newPassword=dialog.querySelector("#yardNewPassword"),confirmPassword=dialog.querySelector("#yardConfirmPassword"),passwordMessage=dialog.querySelector("#yardPasswordMessage"),savePassword=dialog.querySelector("#yardSavePassword");
