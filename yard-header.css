@@ -56,4 +56,6 @@ body .section-heading h2,body .active-users-heading h2{font-size:18px}
 /* Small alignment adjustment for the header brand and navigation. */
 .topbar-brand{position:relative;left:8px}
 
-.topbar-brand .yard-site-nav{position:relative;top:3px}
+.topbar-brand .yard-site-nav{position:relative;top:2px}
+
+.topbar-brand>.company-logo{position:relative;left:-1px}
