@@ -70,3 +70,7 @@ html{overflow-y:auto;scrollbar-gutter:stable}
 .topbar>#dockRoleLabel,.topbar-actions>#dockRoleLabel,.topbar-actions>#signOut,.topbar-actions>#signOutBtn{display:none!important}
 .yard-nav-primary>[hidden]{display:block!important;visibility:hidden;pointer-events:none}
 @media(max-width:720px){.topbar{display:flex}}
+
+/* Shared divider and a 16px gap before the first panel on every yard page. */
+.topbar{border-bottom:1px solid var(--border);margin-bottom:0}
+.yard-page-content{padding-top:16px}
