@@ -59,3 +59,13 @@ body .section-heading h2,body .active-users-heading h2{font-size:18px}
 .topbar-brand .yard-site-nav{position:relative;top:2px}
 
 .topbar-brand>.company-logo{position:relative;left:-1px}
+
+/* Keep the header geometry stable before account data and page rows load. */
+html{overflow-y:scroll}
+.topbar{display:grid;grid-template-columns:max-content minmax(0,1fr)}
+.topbar-brand{flex-shrink:0}
+.topbar .yard-site-nav{flex-shrink:0}
+.topbar .user-email{border:0!important;background:transparent!important;color:var(--muted);padding:0!important;min-height:0!important;font-size:13px;font-weight:700;cursor:pointer}
+.topbar>#dockRoleLabel,.topbar-actions>#dockRoleLabel,.topbar-actions>#signOut,.topbar-actions>#signOutBtn{display:none!important}
+.yard-nav-primary>[hidden]{display:block!important;visibility:hidden;pointer-events:none}
+@media(max-width:720px){.topbar{display:flex}}
