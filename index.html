@@ -371,8 +371,11 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 #authLoading{display:none!important}
 .notice:empty{display:none}
 
+/* Permission checks must not collapse either row of header navigation. */
+.topbar .yard-nav-secondary[data-dock-denied="true"]{display:block!important;visibility:hidden;pointer-events:none}
+
 </style>
-<link rel="stylesheet" href="yard-header.css?v=20261026-stable-first-paint">
+<link rel="stylesheet" href="yard-header.css?v=20261026-preserve-transfer-link">
 </head>
 <body>
 <div id="app">
@@ -393,7 +396,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 
   <main id="boardScreen" class="yard-loading">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261026-stable-first-paint" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261026-stable-first-paint">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261026-stable-first-paint">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261026-preserve-transfer-link" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261026-preserve-transfer-link">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261026-preserve-transfer-link">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge"></span>
         <label class="theme-switch" for="themeToggle">
@@ -642,7 +645,7 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="dock-voice.js?v=20261023-wall-slots"></script>
 <script src="edit-guard.js?v=20261016-rapid-saves"></script>
-<script src="access-control.js?v=20261014-short-names"></script>
+<script src="access-control.js?v=20261026-preserve-header"></script>
 <script>
 (async()=>{
   try{
