@@ -74,3 +74,20 @@ html{overflow-y:auto;scrollbar-gutter:stable}
 /* Shared divider and a 16px gap before the first panel on every yard page. */
 .topbar{border-bottom:1px solid var(--border);margin-bottom:0}
 .yard-page-content{padding-top:16px}
+
+/* Match the Transfers dark palette across Yard View, Trailers, and Docks. */
+html[data-theme="dark"]{color-scheme:dark;--bg:#10151b;--panel:#1a222b;--text:#d9e2ea;--muted:#91a0ad;--border:#34404c;--line:#34404c;--accent:#4f91bd;--accent-dark:#326f99}
+html[data-theme="dark"] body{background:var(--bg);color:var(--text)}
+html[data-theme="dark"] .topbar{background:#0b1016;border-bottom-color:#28323c}
+html[data-theme="dark"] .panel,html[data-theme="dark"] .summary-card,html[data-theme="dark"] .action-modal,html[data-theme="dark"] .auth-card,html[data-theme="dark"] dialog{background:var(--panel);color:var(--text);border-color:var(--border);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#121920;color:#dbe4ec;border-color:#3d4955}
+html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[data-theme="dark"] textarea:focus{outline:2px solid rgba(79,145,189,.35);border-color:#5b94ba}
+html[data-theme="dark"] .secondary,html[data-theme="dark"] .topbar .secondary,html[data-theme="dark"] .close-btn,html[data-theme="dark"] .instruction-type-btn,html[data-theme="dark"] .building-btn,html[data-theme="dark"] .dock-dest,html[data-theme="dark"] .yard-page-content button:not([class]),html[data-theme="dark"] .yard-account-audio button{background:#252f39;color:#dbe4ec;border-color:#46525e}
+html[data-theme="dark"] .primary{background:#326f99;border-color:#4384af;color:#f7fbff}
+html[data-theme="dark"] .danger{background:#382326;color:#f0a2a2;border-color:#704247}
+html[data-theme="dark"] .building-body,html[data-theme="dark"] .action-choice>button,html[data-theme="dark"] .batch-selected-list,html[data-theme="dark"] .activity-item,html[data-theme="dark"] .active-user,html[data-theme="dark"] .move-completion-help{background:#151c23;border-color:#34404c;color:var(--text)}
+html[data-theme="dark"] .activity-item.actionable:hover{background:#202a34;border-color:#46525e}
+html[data-theme="dark"] .chat-message,html[data-theme="dark"] .chat-form{border-color:#34404c}
+html[data-theme="dark"] .chat-emoji-picker{background:#121920;border-color:#3d4955}
+html[data-theme="dark"] .chat-emoji:hover{background:#1b2731}
+html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
