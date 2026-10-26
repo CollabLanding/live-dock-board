@@ -6,7 +6,7 @@
  function fit(){
   frame=0;
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),elements=new Set();let node;
-  while(node=walker.nextNode()){const el=node.parentElement;if(el&&node.textContent.trim()&&!skipped.has(el.tagName)&&!el.closest("svg,script,style,textarea,select"))elements.add(el)}
+  while(node=walker.nextNode()){const el=node.parentElement;if(el&&node.textContent.trim()&&!skipped.has(el.tagName)&&!el.closest("svg,script,style,textarea,select,.yard-site-nav"))elements.add(el)}
   for(const el of elements){
    if(!el.getClientRects().length)continue;
    let original=originals.get(el);if(!original){original={fontSize:el.style.fontSize,fontPriority:el.style.getPropertyPriority("font-size"),letterSpacing:el.style.letterSpacing};originals.set(el,original)}
