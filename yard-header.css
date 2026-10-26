@@ -104,3 +104,11 @@ html[data-theme="dark"] *{scrollbar-color:#46525e #151c23}
 
 /* Permission checks must not collapse either row of header navigation. */
 .topbar .yard-nav-secondary[data-dock-denied="true"]{display:block!important;visibility:hidden;pointer-events:none}
+
+/* Scroll the page panels below the shared header on every LTB page. */
+html{height:100%;overflow:hidden;scrollbar-gutter:auto}
+body{height:100dvh;overflow:hidden}
+#boardScreen,body>main{height:100dvh;display:flex;flex-direction:column;min-height:0}
+.topbar{flex:0 0 auto;width:100%;margin-left:0}
+.yard-page-scroll{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable}
+.yard-page-content{width:100%}
