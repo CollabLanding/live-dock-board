@@ -390,6 +390,7 @@ body{height:100dvh;overflow:hidden}
 .dock-button .dock-status,.dock-button .dock-status.custom-label{padding-left:0;padding-right:0}
 .dock-button .dock-move,.dock-button.has-request .dock-move{margin-left:0;margin-right:0;padding-left:0;padding-right:0;font-size:9px;line-height:1.05}
 </style>
+<style>.dock-title-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.dock-title-tools h2{white-space:nowrap}.dock-title-tools .small{min-height:30px;padding:5px 8px;font-size:12px}</style>
 </head>
 <body>
 <div id="app">
@@ -522,7 +523,7 @@ body{height:100dvh;overflow:hidden}
 <div id="actionBackdrop" class="modal-backdrop hidden" role="presentation">
   <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
     <header class="modal-head">
-      <div><h2 id="actionTitle" data-no-translate>Dock</h2></div>
+      <div class="dock-title-tools"><h2 id="actionTitle" data-no-translate>Dock</h2><button id="copyDockStatus" class="secondary small" type="button">Copy</button><button id="pasteDockStatus" class="secondary small" type="button" disabled>Paste</button></div>
       <div class="modal-head-actions">
         <button id="hideDockButton" class="hide-dock-header-btn" type="button" title="Hide this dock / Ocultar esta puerta">Hide</button>
         <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
@@ -1833,8 +1834,31 @@ body{height:100dvh;overflow:hidden}
         currentMove.classList.add("hidden");clearMove.classList.add("hidden");
       }
     }
+    let copiedDockStatus=null;
+    function readCopiedDockStatus(){
+      try{const value=JSON.parse(sessionStorage.getItem("ltb-copied-dock-status")||"null");if(value&&STATUS_OPTIONS.some(([status])=>status===value.status)&&(value.status!=="Custom"||String(value.customText||"").trim()))return {status:value.status,customText:value.status==="Custom"?String(value.customText).slice(0,28):""}}catch{}
+      return copiedDockStatus;
+    }
+    $("copyDockStatus").addEventListener("click",()=>{
+      if(!selectedDockId)return;
+      const status=statusSelect.value,customText=status==="Custom"?customStatusText.value.trim():"";
+      if(status==="Custom"&&!customText){modalMessage.textContent="Enter custom status text before copying.";return}
+      copiedDockStatus={status,customText};
+      try{sessionStorage.setItem("ltb-copied-dock-status",JSON.stringify(copiedDockStatus))}catch{}
+      $("pasteDockStatus").disabled=!access.can("update_status");
+      modalMessage.style.color="";modalMessage.textContent="Status copied.";
+    });
+    $("pasteDockStatus").addEventListener("click",()=>{
+      if(!selectedDockId||!access.can("update_status"))return;
+      const copied=readCopiedDockStatus();if(!copied)return;
+      statusSelect.value=copied.status;customStatusText.value=copied.customText;
+      customStatusWrap.classList.toggle("hidden",copied.status!=="Custom");
+      renderStatusChoices();statusPanel.classList.remove("hidden");
+      modalMessage.style.color="";modalMessage.textContent="Status pasted. Click Update to save.";
+    });
     function openDock(id){if(!access.can("update_status")&&!access.can("request_moves")&&!access.can("hide_docks"))return;
       selectedDockId=id;selectedMoveBuilding=null;const d=docks.get(id);
+      $("pasteDockStatus").disabled=!access.can("update_status")||!readCopiedDockStatus();
       window.EditGuard?.unpin("docks");window.EditGuard?.pin("docks",d);
       releaseTrailerButton.classList.toggle("hidden",!d.trailer_number||!access.can("update_status"));
       releaseTrailerButton.textContent=`Release ${d.trailer_number||"Trailer"} / Liberar remolque`;
