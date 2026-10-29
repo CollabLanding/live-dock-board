@@ -522,7 +522,7 @@ body{height:100dvh;overflow:hidden}
 <div id="actionBackdrop" class="modal-backdrop hidden" role="presentation">
   <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="actionTitle">
     <header class="modal-head">
-      <div><h2 id="actionTitle">Dock</h2></div>
+      <div><h2 id="actionTitle" data-no-translate>Dock</h2></div>
       <div class="modal-head-actions">
         <button id="hideDockButton" class="hide-dock-header-btn" type="button" title="Hide this dock / Ocultar esta puerta">Hide</button>
         <button id="closeAction" class="close-btn" type="button" aria-label="Close">×</button>
@@ -1842,7 +1842,7 @@ body{height:100dvh;overflow:hidden}
       initialCustomStatusText=String(d.custom_status_text||"");
       const currentInstructionType=activeInstructionType(d);
       pendingMove={type:currentInstructionType,building:d.move_to_building==null?null:Number(d.move_to_building),dock:d.move_to_dock_number==null?null:Number(d.move_to_dock_number),group:d.move_to_group||null,changed:false,clear:false};
-      actionTitle.textContent=`Building / Edificio ${d.building} · Dock / Puerta ${dockNumber(d.dock_number,d.building)}`;
+      actionTitle.textContent=`B: ${d.building} D:${dockNumber(d.dock_number,d.building)}`;
 
       statusSelect.value=initialStatus;
       renderStatusChoices();
