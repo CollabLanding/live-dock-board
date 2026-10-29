@@ -582,10 +582,7 @@ body{height:100dvh;overflow:hidden}
 <div id="batchBackdrop" class="modal-backdrop hidden" role="presentation">
   <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="batchTitle">
     <header class="modal-head">
-      <div>
-        <h2 id="batchTitle">Batch Update / Actualización en lote</h2>
-        <p id="batchSubtitle">Selected docks / Puertas seleccionadas</p>
-      </div>
+      <div><div class="dock-title-tools"><h2 id="batchTitle">Batch Update</h2><button id="copyBatchStatus" class="secondary small" type="button">Copy</button><button id="pasteBatchStatus" class="secondary small" type="button" disabled>Paste</button></div><p id="batchSubtitle" hidden></p></div>
       <div class="modal-head-actions">
         <button id="hideBatchDocks" class="hide-dock-header-btn" type="button" title="Hide selected docks">Hide</button>
         <button id="closeBatch" class="close-btn" type="button" aria-label="Close">×</button>
@@ -594,35 +591,35 @@ body{height:100dvh;overflow:hidden}
     <div class="modal-body">
       <div id="batchSelectedList" class="batch-selected-list"></div>
       <div>
-        <div style="margin-bottom:8px;font-size:13px;font-weight:900">Status / Estado <span style="font-weight:600;color:var(--muted)">(optional / opcional)</span></div>
+        <div style="margin-bottom:8px;font-size:13px;font-weight:900">Status</div>
         <div id="batchStatusOptionGrid" class="status-option-grid" role="group" aria-label="Batch status"></div>
-        <label id="batchCustomWrap" class="hidden" style="display:block;margin-top:12px">Custom text / Texto personalizado
-          <input id="batchCustomText" type="text" maxlength="28" placeholder="Text for selected dock squares / Texto para las puertas seleccionadas" autocomplete="off">
-          <small style="display:block;margin-top:5px;color:var(--muted);font-size:11px">Maximum 28 characters / Máximo 28 caracteres</small>
+        <label id="batchCustomWrap" class="hidden" style="display:block;margin-top:12px">Custom text
+          <input id="batchCustomText" type="text" maxlength="28" placeholder="Status text" autocomplete="off">
+          
         </label>
       </div>
 
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="margin-bottom:8px;font-size:13px;font-weight:900">Request / Solicitud <span style="font-weight:600;color:var(--muted)">(optional / opcional)</span></div>
+        <div style="margin-bottom:8px;font-size:13px;font-weight:900">Request</div>
         <div id="batchInstructionTypeGrid" class="instruction-type-picker" role="group" aria-label="Batch request type">
-          <button id="batchRequestMove" class="instruction-type-btn" type="button">Move / Mover</button>
-          <button id="batchRequestAdjust" class="instruction-type-btn" type="button">Adjust / Ajustar</button>
-          <button id="batchRequestSeal" class="instruction-type-btn" type="button">Seal Check / Revisar sello</button>
+          <button id="batchRequestMove" class="instruction-type-btn" type="button">Move</button>
+          <button id="batchRequestAdjust" class="instruction-type-btn" type="button">Adjust</button>
+          <button id="batchRequestSeal" class="instruction-type-btn" type="button">Seal Check</button>
         </div>
         <div id="batchMoveBuildingWrap" class="hidden">
-          <div style="margin:8px 0 7px;font-size:12px;font-weight:900">General Move Destination / Destino general</div>
+          <div style="margin:8px 0 7px;font-size:12px;font-weight:900">Destination</div>
           <div class="building-picker">
-            <button id="batchMove100" class="building-btn" type="button">Building 100 / Edificio 100</button>
-            <button id="batchMove200" class="building-btn" type="button">Building 200 / Edificio 200</button>
+            <button id="batchMove100" class="building-btn" type="button">Building 100</button>
+            <button id="batchMove200" class="building-btn" type="button">Building 200</button>
           </div>
-          <div style="margin-top:6px;color:var(--muted);font-size:11px">Batch moves are assigned as general building moves. Specific destination docks can still be assigned from an individual dock / Los movimientos en lote son movimientos generales por edificio.</div>
+          
         </div>
-        <button id="batchClearRequest" class="secondary small" type="button" style="margin-top:10px">Clear Request / Borrar solicitud</button>
+        <button id="batchClearRequest" class="secondary small" type="button" style="margin-top:10px">Clear Request</button>
       </div>
 
       <div class="batch-actions">
-        <button id="cancelBatch" class="secondary" type="button">Cancel / Cancelar</button>
-        <button id="applyBatchUpdate" class="primary" type="button">Update Selected / Actualizar selección</button>
+        <button id="cancelBatch" class="secondary" type="button">Cancel</button>
+        <button id="applyBatchUpdate" class="primary" type="button">Update Selected</button>
       </div>
       <div id="batchMessage" class="modal-message" aria-live="polite"></div>
     </div>
@@ -1280,7 +1277,7 @@ body{height:100dvh;overflow:hidden}
         const button=document.createElement("button");
         button.type="button";
         button.className=`status-option-btn ${meta.cls}${value===batchStatusValue?" selected":""}`;
-        button.textContent=label;
+        button.textContent=label.split(" / ")[0];
         button.setAttribute("aria-pressed",String(value===batchStatusValue));
         button.addEventListener("click",()=>{
           batchStatusValue=value;
@@ -1323,7 +1320,8 @@ body{height:100dvh;overflow:hidden}
       if(selected.length<2){clearBatchSelection();return}
       selected.forEach(d=>window.EditGuard?.pin("docks",d));
       selected.sort((a,b)=>a.building-b.building||a.side.localeCompare(b.side)||a.dock_number-b.dock_number);
-      batchSubtitle.textContent=`${selected.length} docks selected / ${selected.length} puertas seleccionadas`;
+      batchSubtitle.textContent="";
+      $("pasteBatchStatus").disabled=!access.can("update_status")||!readCopiedDockStatus();
       batchSelectedList.textContent=selected.map(d=>dockLabel(d)).join(" · ");
       batchStatusValue="";batchCustomText.value="";batchCustomWrap.classList.add("hidden");
       batchInstructionValue="";batchMoveBuilding=null;batchClearInstruction=false;batchMessage.textContent="";
@@ -1834,6 +1832,29 @@ body{height:100dvh;overflow:hidden}
         currentMove.classList.add("hidden");clearMove.classList.add("hidden");
       }
     }
+    $("copyBatchStatus").addEventListener("click",()=>{
+      const selected=[...batchSelectedDockIds].map(id=>docks.get(id)).filter(Boolean);
+      let status=batchStatusValue,customText=status==="Custom"?batchCustomText.value.trim():"";
+      if(!status&&selected.length){
+        status=normalizedStatus(selected[0].status);
+        customText=status==="Custom"?String(selected[0].custom_status_text||"").trim():"";
+        if(!selected.every(d=>normalizedStatus(d.status)===status&&(status!=="Custom"||String(d.custom_status_text||"").trim()===customText))){
+          batchMessage.style.color="";batchMessage.textContent="Choose a status to copy.";return;
+        }
+      }
+      if(!status||(status==="Custom"&&!customText)){batchMessage.textContent="Choose a status to copy.";return}
+      copiedDockStatus={status,customText};
+      try{sessionStorage.setItem("ltb-copied-dock-status",JSON.stringify(copiedDockStatus))}catch{}
+      $("pasteBatchStatus").disabled=!access.can("update_status");
+      batchMessage.style.color="";batchMessage.textContent="Status copied.";
+    });
+    $("pasteBatchStatus").addEventListener("click",()=>{
+      if(!access.can("batch_updates")||!access.can("update_status"))return;
+      const copied=readCopiedDockStatus();if(!copied)return;
+      batchStatusValue=copied.status;batchCustomText.value=copied.customText;
+      batchCustomWrap.classList.toggle("hidden",copied.status!=="Custom");
+      renderBatchStatusChoices();batchMessage.style.color="";batchMessage.textContent="Status pasted. Click Update Selected to save.";
+    });
     let copiedDockStatus=null;
     function readCopiedDockStatus(){
       try{const value=JSON.parse(sessionStorage.getItem("ltb-copied-dock-status")||"null");if(value&&STATUS_OPTIONS.some(([status])=>status===value.status)&&(value.status!=="Custom"||String(value.customText||"").trim()))return {status:value.status,customText:value.status==="Custom"?String(value.customText).slice(0,28):""}}catch{}
