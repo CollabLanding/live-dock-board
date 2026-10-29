@@ -474,7 +474,7 @@ body{height:100dvh;overflow:hidden}
       </section>
 
       <section class="panel chat-panel">
-        <div class="section-heading"><div><h2>Team Chat</h2></div></div>
+        <div class="section-heading"><div><h2>Team Chat</h2></div><button id="clearChatHistory" class="clear-chat-btn" type="button">Clear Chat</button></div>
         <div id="chatList" class="chat-list" aria-live="polite"></div>
         <div id="chatNote" class="chat-note" aria-live="polite"></div>
         <form id="chatForm" class="chat-form">
@@ -488,23 +488,7 @@ body{height:100dvh;overflow:hidden}
       </section>
     </div>
 
-    <section class="panel legend">
-      <span><i class="swatch" style="background:var(--open)"></i>Open</span>
-      <span><i class="swatch" style="background:var(--empty)"></i>Empty</span>
-      <span><i class="swatch" style="background:var(--loading)"></i>Loading</span>
-      <span><i class="swatch" style="background:var(--loaded)"></i>Loaded</span>
-      <span><i class="swatch" style="background:var(--ready)"></i>Ready</span>
-      <span><i class="swatch" style="background:var(--finished)"></i>Finished Product / Producto terminado</span>
-      <span><i class="swatch" style="background:var(--threepl)"></i>3PL / Logística de terceros</span>
-      <span><i class="swatch" style="background:var(--needempty)"></i>Need An Empty / Necesita un vacío</span>
-      <span><i class="swatch" style="background:var(--hold)"></i>Closed</span>
-      <span><i class="swatch" style="background:var(--oos)"></i>Out of Service</span>
-      <span><i class="swatch" style="background:var(--custom)"></i>Custom / Personalizado</span>
-      <span style="margin-left:auto"><i class="swatch" style="background:#facc15"></i>On It</span>
-<span><i class="swatch" style="background:#22c55e"></i>Done (5 min)</span>
-      <span><i class="swatch" style="background:#ef4444"></i>Need Clarification</span>
-      <div class="legend-actions"><button id="clearChatHistory" class="clear-chat-btn" type="button">Clear Chat</button></div>
-    </section>
+    
       </div>
 
       <aside class="board-sidebar">
@@ -2634,9 +2618,8 @@ body{height:100dvh;overflow:hidden}
 (()=>{
   const sidebar=document.querySelector(".board-sidebar");
   const main=document.querySelector(".board-main");
-  const legend=main?.querySelector(".legend");
   const users=sidebar?.querySelector(".active-users-panel");
-  if(!sidebar||!main||!legend)return;
+  if(!sidebar||!main)return;
   let frame=0;
   function alignStoragePanel(){
     frame=0;
@@ -2644,8 +2627,8 @@ body{height:100dvh;overflow:hidden}
       sidebar.style.removeProperty("--sidebar-page-height");
       return;
     }
-    if(!sidebar.getClientRects().length||!legend.getClientRects().length)return;
-    const height=Math.max(0,legend.getBoundingClientRect().bottom-sidebar.getBoundingClientRect().top);
+    if(!sidebar.getClientRects().length||!main.getClientRects().length)return;
+    const height=Math.max(0,main.getBoundingClientRect().bottom-sidebar.getBoundingClientRect().top);
     sidebar.style.setProperty("--sidebar-page-height",height+"px");
   }
   function scheduleAlignment(){if(!frame)frame=requestAnimationFrame(alignStoragePanel)}
