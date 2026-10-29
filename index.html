@@ -1650,7 +1650,7 @@ body{height:100dvh;overflow:hidden}
       const target=document.createElement("button"),number=String(d.trailer_number||"").trim();
       target.type="button";target.className="dock-trailer-target"+(number?" assigned":"");
       target.dataset.dockId=String(d.id);
-      target.title=number?`${number} — Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)}`:`Click to assign or drop a trailer here — Building ${d.building}, Dock ${dockNumber(d.dock_number,d.building)}`;
+
       target.setAttribute("aria-label",target.title);
       target.innerHTML=`<i class="dock-trailer-dot" aria-hidden="true"></i>${number?`<span class="dock-trailer-number">${safe(number)}</span>`:""}`;
       target.addEventListener("pointerdown",e=>e.stopPropagation());
