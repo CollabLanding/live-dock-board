@@ -392,6 +392,12 @@ body{height:100dvh;overflow:hidden}
 </style>
 <style>.dock-title-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.dock-title-tools h2{white-space:nowrap}.dock-title-tools .small{min-height:30px;padding:5px 8px;font-size:12px}</style>
 <style>html[data-theme="dark"] .yard-label{color:var(--text)}</style>
+<style>
+.downed-warning{padding:10px;border:1px solid #d99b25;border-radius:8px;background:#5b3b152b;color:#d99b25;font-weight:800}
+.downed-trailers-panel .active-users-heading h2{color:#d99b25}
+.board-sidebar{grid-template-rows:auto minmax(100px,1fr) minmax(80px,.6fr) minmax(0,320px)}
+@media(max-width:1250px){.board-sidebar{grid-template-rows:auto auto auto auto}}
+</style>
 </head>
 <body>
 <div id="app">
@@ -412,7 +418,7 @@ body{height:100dvh;overflow:hidden}
 
   <main id="boardScreen" class="yard-loading">
     <header class="topbar">
-      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261026-below-header-scroll" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261026-below-header-scroll">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261026-below-header-scroll">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
+      <div class="topbar-brand"><img class="company-logo" src="/live-dock-board/site-logo.png?v=2" alt="Fanatics Collectibles"><div class="yard-site-nav"><div class="yard-nav-primary"><h1><a href="index.html?v=20261030-downed-trailers" aria-current="page">Yard View</a></h1><a id="dockTrailersLink" hidden href="trailers.html?v=20261030-downed-trailers">Trailers</a><a id="dockDocksLink" hidden href="docks.html?v=20261030-downed-trailers">Docks</a></div><a class="topbar-page-link yard-nav-secondary" href="/Transfers/">Transfers</a></div></div>
       <div class="topbar-actions">
         <span id="connectionBadge" class="connection-badge"></span>
         <label class="theme-switch" for="themeToggle">
@@ -498,6 +504,7 @@ body{height:100dvh;overflow:hidden}
         <div id="activeUsersList" class="active-users-list"><div class="active-empty"></div></div>
       </section>
       <section class="panel active-trailers-panel" aria-labelledby="activeTrailersTitle"><div class="active-users-heading"><h2 id="activeTrailersTitle">Active Trailers</h2><span class="active-count">27</span></div><ul class="active-trailers-list"><li>GPS5150</li><li>H08819</li><li>H15257</li><li>H15643</li><li>H15649</li><li>H15761</li><li>H15817</li><li>H15819</li><li>U85250</li><li>U98219</li><li>W00514</li><li>W02111</li><li>W04979</li><li>W10657</li><li>W23496</li><li>W23867</li><li>W24822</li><li>W25727</li><li>W83691</li><li>W84716</li><li>W84935</li><li>W85767</li><li>W86005</li><li>W87588</li><li>W92475</li><li>W99595</li><li>Y10505</li></ul></section>
+      <section class="panel active-trailers-panel downed-trailers-panel" aria-labelledby="downedTrailersTitle"><div class="active-users-heading"><h2 id="downedTrailersTitle">Downed Trailers</h2><span class="active-count">0</span></div><ul class="active-trailers-list"></ul></section>
       <section class="panel active-trailers-panel storage-trailers-panel" aria-labelledby="storageTrailersTitle"><div class="active-users-heading"><h2 id="storageTrailersTitle">Storage Trailers</h2><span class="active-count">14</span></div><ul class="active-trailers-list"><li><span>318420</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>H15645</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>H15827</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>U90770</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>U92344</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>U94421</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>U95524</span><small class="active-trailer-location"><span>SV</span><span>Storage</span></small></li><li><span>W03511</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li>W43897</li><li><span>W45858</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li>W48970</li><li><span>Y10496</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>Y10509</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li><li><span>Y10512</span><small class="active-trailer-location"><span>Allen</span><span>Storage</span></small></li></ul></section>
       </aside>
     </div>
@@ -515,6 +522,7 @@ body{height:100dvh;overflow:hidden}
       </div>
     </header>
     <div class="modal-body">
+      <p id="dockDownedWarning" class="downed-warning" hidden></p>
       <div class="action-choice">
         <button id="statusToggle" type="button"><span>Update Status / Actualizar estado</span><span aria-hidden="true">▾</span></button>
         <div id="statusPanel" class="action-panel hidden">
@@ -1391,6 +1399,7 @@ body{height:100dvh;overflow:hidden}
       }
 
       batchMessage.style.color="";
+      if(!await confirmDownedTrailers(hasInstructionChange?"Update selected docks / request moves":"Update selected dock statuses",ids))return;
       batchMessage.textContent="Updating selected docks… / Actualizando puertas…";
       applyBatchUpdate.disabled=true;
       const {data,error}=await supabase.from("docks").update(full).in("id",ids).select("*");
@@ -1504,6 +1513,7 @@ body{height:100dvh;overflow:hidden}
       await setDocksCollapsed(ids,true);
     }
     async function completeSealCheck(dockId,button){
+      if(!await confirmDownedTrailers("Complete seal check and update status",[dockId]))return;
       if(button)button.disabled=true;
       pendingSealCompletionDockIds.add(dockId);
       const {error}=await supabase.rpc("complete_seal_check",{p_dock_id:dockId});
@@ -1520,6 +1530,32 @@ body{height:100dvh;overflow:hidden}
 
     let trailerCatalog=[],trailerCatalogChannel=null,trailerCatalogTimer=null;
     let selectedTrailerNumber=null;
+
+    function refreshDownedDockWarning(){
+      const d=docks.get(selectedDockId),t=trailerCatalog.find(t=>t.number===d?.trailer_number),warning=$("dockDownedWarning");
+      warning.hidden=!t?.is_downed;warning.textContent=t?.is_downed?"⚠ Trailer "+t.number+" is DOWNED.":"";
+    }
+    function destinationDockIds(building,number){
+      if(building==null||number==null)return [];
+      return [...docks.values()].filter(d=>Number(d.building)===Number(building)&&Number(d.dock_number)===Number(number)).map(d=>d.id);
+    }
+    async function confirmDownedTrailers(action,ids=[],extraNumbers=[]){
+      try{
+        const dockIds=[...new Set(ids.filter(Boolean))];
+        let assigned=[];
+        if(dockIds.length){
+          const r=await supabase.from("docks").select("trailer_number").in("id",dockIds);
+          if(r.error)throw r.error;assigned=(r.data||[]).map(d=>d.trailer_number);
+        }
+        const numbers=[...new Set([...assigned,...extraNumbers].filter(Boolean))];
+        if(!numbers.length)return true;
+        const r=await supabase.from("trailers").select("number").in("number",numbers).eq("is_downed",true);
+        if(r.error)throw r.error;
+        if(!r.data?.length)return true;
+        return confirm("⚠ DOWNED TRAILER"+(r.data.length>1?"S":"")+": "+r.data.map(t=>t.number).join(", ")+"\n\n"+action+"? Continue anyway?");
+      }catch(error){alert("Could not check trailer status: "+error.message);return false}
+    }
+
 
     let trailerDragScroll=null,trailerDragFrame=0;
     function stopTrailerEdgeScroll(){
@@ -1571,16 +1607,16 @@ body{height:100dvh;overflow:hidden}
 
 
     async function loadTrailerCatalog(){
-      const {data,error}=await supabase.from("trailers").select("id,number,category,location_label,notes").order("number");
+      const {data,error}=await supabase.from("trailers").select("id,number,category,location_label,notes,is_downed").order("number");
       if(error)throw error;
       trailerCatalog=data||[];
-      for(const [category,title] of [["Active","activeTrailersTitle"],["Storage","storageTrailersTitle"]]){
-        const panel=$(title).closest("section"),items=trailerCatalog.filter(t=>t.category===category);
+      for(const [category,title] of [["Active","activeTrailersTitle"],["Downed","downedTrailersTitle"],["Storage","storageTrailersTitle"]]){
+        const panel=$(title).closest("section"),items=trailerCatalog.filter(t=>category==="Downed"?t.is_downed:t.category===category&&!t.is_downed);
         panel.querySelector(".active-count").textContent=items.length;
         panel.querySelector(".active-trailers-list").innerHTML=items.map(t=>`<li data-trailer-notes="${safe(t.notes||"")}"><span>${safe(t.number)}</span>${t.location_label?`<small class="active-trailer-location">${t.location_label.split(/\s+/).map(part=>`<span>${safe(part)}</span>`).join("")}</small>`:""}</li>`).join("");
       }
       renderTrailerLists();
-      renderTrailerPicker();
+      renderTrailerPicker();refreshDownedDockWarning();
     }
 
     function initializeTrailerLists(){
@@ -1631,10 +1667,10 @@ body{height:100dvh;overflow:hidden}
       if(!trailerPicker.open)return;
       $("clearTrailerPicker").disabled=trailerPickerSaving||!docks.get(trailerPickerDockId)?.trailer_number||!access.can("update_status");
       const term=trailerPickerSearch.value.trim().toLowerCase();
-      const rows=trailerCatalog.filter(t=>[t.number,t.category,t.location_label,t.notes].join(" ").toLowerCase().includes(term));
+      const rows=trailerCatalog.filter(t=>[t.number,t.category,t.is_downed?"Downed":"",t.location_label,t.notes].join(" ").toLowerCase().includes(term));
       trailerPickerRows.innerHTML=rows.length?trailerPickerSort.sort(rows).map(t=>{
         const dock=[...docks.values()].find(d=>d.trailer_number===t.number),here=dock?.id===trailerPickerDockId;
-        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
+        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}${t.is_downed?' · ⚠ Downed':''}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
       }).join(""):'<tr><td colspan="6">No trailers found.</td></tr>';
     }
     function openTrailerPicker(dockId){
@@ -1674,6 +1710,7 @@ body{height:100dvh;overflow:hidden}
       if(!access.can("update_status")||!number)return false;
       if(!trailerCatalog.some(t=>t.number===number))return false;
       try{
+        if(!await confirmDownedTrailers("Assign trailer to this dock",[dockId],[number]))return false;
         const {error}=await supabase.rpc("assign_dock_trailer",{p_dock_id:dockId,p_trailer_number:number});
         if(error)throw error;
         selectedTrailerNumber=null;
@@ -1932,7 +1969,7 @@ body{height:100dvh;overflow:hidden}
       resetMoveButtons();showPendingMove("");modalMessage.textContent="";modalMessage.style.color="";
       renderInstructionTypeButtons(currentInstructionType||"Move");
       refreshCurrentMoveDisplay(d);
-      actionBackdrop.classList.remove("hidden");loadDockGroups().catch(e=>{modalMessage.textContent=e.message})
+      refreshDownedDockWarning();actionBackdrop.classList.remove("hidden");loadDockGroups().catch(e=>{modalMessage.textContent=e.message})
     }
     document.addEventListener("edit-load-latest",event=>{
       if(event.detail.table!=="docks")return;
@@ -2092,6 +2129,7 @@ body{height:100dvh;overflow:hidden}
       if(!statusChanged&&!customChanged&&!instructionWillChange){
         modalMessage.style.color="#64748b";modalMessage.textContent="No changes selected / No se seleccionaron cambios.";return;
       }
+      if(!await confirmDownedTrailers(instructionWillChange?"Update dock / request move":"Update dock status",[selectedDockId,...destinationDockIds(nextBuilding,nextDock)]))return;
       const saved=await updateSelected(payload,"Update saved / Actualización guardada.");
       if(saved){
         if(instructionWillChange&&payload.instruction_type)playSound("move");
@@ -2383,6 +2421,7 @@ body{height:100dvh;overflow:hidden}
       if(!access.can("respond_moves")||moveCompletionBusy||!pendingMoveCompletion)return;
       const {historyId}=pendingMoveCompletion;moveCompletionBusy=true;moveCompletionMessage.textContent="Completing move…";
       try{
+        if(!await confirmDownedTrailers("Complete move",[pendingMoveCompletion.activity.dock_id,destination.id])){moveCompletionBusy=false;moveCompletionMessage.textContent="";return}
         const {error}=await supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:"Done",p_destination_dock_id:destination.id});if(error)throw error;
         activityStatusCache.set(historyId,"Done");pendingLocalActivitySounds.delete(historyId+"|Done");playSound("done");expandedActivityId=historyId;moveCompletionBusy=false;closeMoveCompletionPicker(true);
         await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
@@ -2394,6 +2433,7 @@ body{height:100dvh;overflow:hidden}
       try{
         const {data:activity,error:readError}=await supabase.from("dock_history").select("id,dock_id,new_move_to_building,new_move_to_dock_number,new_move_to_group,new_instruction_type,activity_status").eq("id",historyId).single();if(readError)throw readError;
         if(status==="Done"&&String(activity.new_instruction_type||"Move")==="Move"&&activity.new_move_to_building!=null&&activity.new_move_to_dock_number==null&&activity.activity_status!=="Done"){pendingLocalActivitySounds.delete(soundKey);openMoveCompletionPicker(historyId,activity);return}
+        if(!await confirmDownedTrailers("Update move activity to "+status,[activity.dock_id,...destinationDockIds(activity.new_move_to_building,activity.new_move_to_dock_number)])){pendingLocalActivitySounds.delete(soundKey);return}
         const {error}=await supabase.rpc("respond_dock_activity",{p_history_id:historyId,p_status:status});if(error)throw error;
         activityStatusCache.set(historyId,status);pendingLocalActivitySounds.delete(soundKey);const sound=activitySoundKind(status);if(sound)playSound(sound);expandedActivityId=historyId;
         await Promise.all([loadDocks(),loadHistory(),loadActivityIndicators()]);
