@@ -398,6 +398,7 @@ body{height:100dvh;overflow:hidden}
 .board-sidebar{grid-template-rows:auto minmax(100px,1fr) minmax(80px,.6fr) minmax(0,320px)}
 @media(max-width:1250px){.board-sidebar{grid-template-rows:auto auto auto auto}}
 </style>
+<style>.trailer-assignment-dot.downed,.trailer-assignment-dot.downed.assigned{background:#ef4444}</style>
 </head>
 <body>
 <div id="app">
@@ -1654,6 +1655,7 @@ body{height:100dvh;overflow:hidden}
         item.draggable=access.can("update_status");
         item.classList.toggle("trailer-selected",selectedTrailerNumber===number);
         item.querySelector(".trailer-assignment-dot").classList.toggle("assigned",Boolean(dock));
+        item.querySelector(".trailer-assignment-dot").classList.toggle("downed",Boolean(trailerCatalog.find(t=>t.number===number)?.is_downed));
         const location=dock?`Assigned to Building ${dock.building}, Dock ${dockNumber(dock.dock_number,dock.building)}`:"Not assigned to a dock";
         item.title=`${number} — ${location}${item.dataset.trailerNotes?" — "+item.dataset.trailerNotes:""}`;
         item.setAttribute("aria-label",item.title);
@@ -1670,7 +1672,7 @@ body{height:100dvh;overflow:hidden}
       const rows=trailerCatalog.filter(t=>[t.number,t.category,t.is_downed?"Downed":"",t.location_label,t.notes].join(" ").toLowerCase().includes(term));
       trailerPickerRows.innerHTML=rows.length?trailerPickerSort.sort(rows).map(t=>{
         const dock=[...docks.values()].find(d=>d.trailer_number===t.number),here=dock?.id===trailerPickerDockId;
-        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}${t.is_downed?' · ⚠ Downed':''}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
+        return `<tr><td class="trailer-picker-number"><i class="trailer-assignment-dot ${t.is_downed?"downed":dock?"assigned":""}" aria-hidden="true"></i> ${safe(t.number)}</td><td>${safe(t.category)}${t.is_downed?' · ⚠ Downed':''}</td><td>${safe(t.location_label)}</td><td>${dock?`Building ${dock.building} · Dock ${dockNumber(dock.dock_number,dock.building)}`:"Unassigned"}</td><td class="trailer-picker-notes">${safe(t.notes)}</td><td><button type="button" class="secondary small" data-assign-trailer="${safe(t.number)}" ${here||trailerPickerSaving?"disabled":""}>${here?"Assigned here":"Assign"}</button></td></tr>`;
       }).join(""):'<tr><td colspan="6">No trailers found.</td></tr>';
     }
     function openTrailerPicker(dockId){
