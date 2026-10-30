@@ -1521,6 +1521,55 @@ body{height:100dvh;overflow:hidden}
     let trailerCatalog=[],trailerCatalogChannel=null,trailerCatalogTimer=null;
     let selectedTrailerNumber=null;
 
+    let trailerDragScroll=null,trailerDragFrame=0;
+    function stopTrailerEdgeScroll(){
+      if(trailerDragFrame)cancelAnimationFrame(trailerDragFrame);
+      trailerDragFrame=0;trailerDragScroll=null;
+    }
+    function trailerEdgeSpeed(position,low,high){
+      const edge=Math.min(56,(high-low)/3);
+      if(high<=low||position<low||position>high)return 0;
+      if(position<low+edge)return -420*(1-(position-low)/edge);
+      if(position>high-edge)return 420*(1-(high-position)/edge);
+      return 0;
+    }
+    function stepTrailerEdgeScroll(now){
+      trailerDragFrame=0;
+      const drag=trailerDragScroll;if(!drag)return;
+      const dt=Math.min(40,Math.max(0,now-drag.time))/1000;drag.time=now;
+      if(drag.point){
+        const {x,y}=drag.point,page=document.querySelector(".yard-page-scroll");
+        const containers=page?[page]:[];
+        const hovered=document.elementFromPoint(x,y);
+        const row=hovered?.closest(".dock-scroll"),list=hovered?.closest(".active-trailers-list");
+        if(row)containers.push(row);if(list)containers.push(list);
+        for(const element of containers){
+          const rect=element.getBoundingClientRect(),pageRect=page?.getBoundingClientRect();
+          const left=Math.max(0,rect.left),right=Math.min(innerWidth,rect.right);
+          const top=Math.max(pageRect?.top||0,rect.top),bottom=Math.min(innerHeight,rect.bottom);
+          if(x<left||x>right||y<top||y>bottom)continue;
+          if(element.scrollWidth>element.clientWidth)element.scrollLeft+=trailerEdgeSpeed(x,left,right)*dt;
+          if(element.scrollHeight>element.clientHeight)element.scrollTop+=trailerEdgeSpeed(y,top,bottom)*dt;
+        }
+      }
+      trailerDragFrame=requestAnimationFrame(stepTrailerEdgeScroll);
+    }
+    function startTrailerEdgeScroll(event){
+      stopTrailerEdgeScroll();trailerDragScroll={point:{x:event.clientX,y:event.clientY},time:performance.now()};
+      trailerDragFrame=requestAnimationFrame(stepTrailerEdgeScroll);
+    }
+    document.addEventListener("dragover",event=>{
+      if(!trailerDragScroll)return;
+      event.preventDefault();trailerDragScroll.point={x:event.clientX,y:event.clientY};
+    },true);
+    document.addEventListener("dragleave",event=>{if(trailerDragScroll&&!event.relatedTarget)trailerDragScroll.point=null},true);
+    document.addEventListener("drop",stopTrailerEdgeScroll,true);
+    document.addEventListener("dragend",stopTrailerEdgeScroll,true);
+    document.addEventListener("keydown",event=>{if(event.key==="Escape")stopTrailerEdgeScroll()},true);
+    window.addEventListener("pagehide",stopTrailerEdgeScroll);
+    window.addEventListener("blur",stopTrailerEdgeScroll);
+
+
     async function loadTrailerCatalog(){
       const {data,error}=await supabase.from("trailers").select("id,number,category,location_label,notes").order("number");
       if(error)throw error;
@@ -1550,6 +1599,7 @@ body{height:100dvh;overflow:hidden}
         item.addEventListener("dragstart",e=>{
           if(!access.can("update_status")){e.preventDefault();return}
           selectedTrailerNumber=number;
+          startTrailerEdgeScroll(e);
           e.dataTransfer.setData("application/x-dock-trailer",number);
           e.dataTransfer.setData("text/plain",number);
           e.dataTransfer.effectAllowed="move";
