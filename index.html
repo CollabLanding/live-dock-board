@@ -82,8 +82,8 @@
     .action-modal{width:min(650px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.34)}
     .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
     .modal-head h2{margin:0;font-size:24px}.modal-head p{margin:4px 0 0;color:var(--muted)}.modal-head-actions{display:flex;align-items:center;gap:7px}.hide-dock-header-btn{height:42px;border:1px solid #cbd5e1;background:#e2e8f0;color:#334155;border-radius:9px;padding:0 13px;font-size:12px;font-weight:900}.hide-dock-header-btn:hover{background:#cbd5e1}.close-btn{border:1px solid var(--border);background:#fff;border-radius:9px;width:42px;height:42px;font-size:22px}
-    .modal-body{padding:18px 20px 22px}.action-choice{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}.action-choice>button{width:100%;border:0;background:#f8fafc;text-align:left;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;font-weight:900;color:var(--text)}
-    .action-choice>button .hint{font-size:12px;color:var(--muted);font-weight:600}.action-panel{padding:15px 16px;border-top:1px solid var(--border)}
+    .modal-body{padding:18px 20px 22px}.action-choice{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}.action-choice>.action-heading{width:100%;border:0;background:#f8fafc;text-align:left;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;font-weight:900;color:var(--text)}
+    .action-choice>.action-heading .hint{font-size:12px;color:var(--muted);font-weight:600}.action-panel{padding:15px 16px;border-top:1px solid var(--border)}
     .status-select-row{display:grid;gap:12px;align-items:end}.status-option-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.status-option-btn{position:relative;min-height:58px;border:2px solid transparent;border-radius:11px;padding:8px 7px;color:#fff;font-size:12px;font-weight:900;line-height:1.15;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);white-space:normal}.status-option-btn:hover{filter:brightness(.96)}.status-option-btn.selected{border-color:#0f172a;box-shadow:0 0 0 3px rgba(15,23,42,.16),inset 0 0 0 1px rgba(255,255,255,.3)}.status-option-btn.selected::after{content:"✓";position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:999px;display:grid;place-items:center;background:#fff;color:#0f172a;font-size:11px}.status-option-btn.status-loading{color:#fff}@media(max-width:620px){.status-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .instruction-type-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.instruction-type-btn{min-height:48px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:7px 8px;font-size:12px;font-weight:900}.instruction-type-btn.active{border-color:var(--accent);background:#eff6ff;color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}.building-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px}.building-btn{min-height:62px;border:1px solid var(--border);border-radius:12px;background:#fff;font-weight:900}.building-btn.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.14);color:var(--accent)}.building-btn.general-selected{background:#eff6ff;border-color:var(--accent);color:var(--accent)}
     .dock-group-bar{display:flex;flex-wrap:wrap;gap:7px;min-height:40px;margin:12px 0}.dock-group-bar button{border:1px solid var(--border);border-radius:8px;padding:8px 12px;background:var(--panel);color:var(--text);font-weight:800}.dock-group-bar button.selected{background:#2563eb;color:#fff;border-color:#2563eb}.dock-group-bar:empty{display:none}
@@ -137,7 +137,7 @@
     html[data-theme="dark"] .connection-badge.live{background:#052e2b;border-color:#166534;color:#86efac}
     html[data-theme="dark"] .connection-badge.offline{background:#3f1217;border-color:#7f1d1d;color:#fecaca}
     html[data-theme="dark"] .building-body,
-    html[data-theme="dark"] .action-choice>button,
+    html[data-theme="dark"] .action-choice>.action-heading,
     html[data-theme="dark"] .batch-selected-list{background:#111827}
     html[data-theme="dark"] .building-body{border-color:#475569}
     html[data-theme="dark"] .activity-item{background:#111827}
@@ -354,7 +354,7 @@ html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[da
 html[data-theme="dark"] .secondary,html[data-theme="dark"] .topbar .secondary,html[data-theme="dark"] .close-btn,html[data-theme="dark"] .instruction-type-btn,html[data-theme="dark"] .building-btn,html[data-theme="dark"] .dock-dest,html[data-theme="dark"] .yard-page-content button:not([class]),html[data-theme="dark"] .yard-account-audio button{background:#252f39;color:#dbe4ec;border-color:#46525e}
 html[data-theme="dark"] .primary{background:#326f99;border-color:#4384af;color:#f7fbff}
 html[data-theme="dark"] .danger{background:#382326;color:#f0a2a2;border-color:#704247}
-html[data-theme="dark"] .building-body,html[data-theme="dark"] .action-choice>button,html[data-theme="dark"] .batch-selected-list,html[data-theme="dark"] .activity-item,html[data-theme="dark"] .active-user,html[data-theme="dark"] .move-completion-help{background:#151c23;border-color:#34404c;color:var(--text)}
+html[data-theme="dark"] .building-body,html[data-theme="dark"] .action-choice>.action-heading,html[data-theme="dark"] .batch-selected-list,html[data-theme="dark"] .activity-item,html[data-theme="dark"] .active-user,html[data-theme="dark"] .move-completion-help{background:#151c23;border-color:#34404c;color:var(--text)}
 html[data-theme="dark"] .activity-item.actionable:hover{background:#202a34;border-color:#46525e}
 html[data-theme="dark"] .chat-message,html[data-theme="dark"] .chat-form{border-color:#34404c}
 html[data-theme="dark"] .chat-emoji-picker{background:#121920;border-color:#3d4955}
@@ -526,8 +526,8 @@ body{height:100dvh;overflow:hidden}
     <div class="modal-body">
       <p id="dockDownedWarning" class="downed-warning" hidden></p>
       <div class="action-choice">
-        <button id="statusToggle" type="button"><span>Update Status / Actualizar estado</span><span aria-hidden="true">▾</span></button>
-        <div id="statusPanel" class="action-panel hidden">
+        <div id="statusToggle" class="action-heading">Update Status / Actualizar estado</div>
+        <div id="statusPanel" class="action-panel">
           <div class="status-select-row">
             <div>
               <div style="margin-bottom:8px;font-size:13px;font-weight:900">Status / Estado</div>
@@ -543,8 +543,8 @@ body{height:100dvh;overflow:hidden}
       </div>
 
       <div class="action-choice">
-        <button id="moveToggle" type="button"><span>Move / Mover</span><span aria-hidden="true">▾</span></button>
-        <div id="movePanel" class="action-panel hidden">
+        <div id="moveToggle" class="action-heading">Move / Mover</div>
+        <div id="movePanel" class="action-panel">
           <div id="currentMove" class="move-current hidden"></div>
 
           <div class="instruction-type-picker" aria-label="Request type / Tipo de solicitud">
@@ -1968,7 +1968,7 @@ body{height:100dvh;overflow:hidden}
       renderStatusChoices();
       customStatusText.value=initialStatus==="Custom"?initialCustomStatusText:"";
       customStatusWrap.classList.toggle("hidden",initialStatus!=="Custom");
-      statusPanel.classList.add("hidden");movePanel.classList.add("hidden");dockPickerWrap.classList.add("hidden");
+      statusPanel.classList.remove("hidden");movePanel.classList.remove("hidden");dockPickerWrap.classList.add("hidden");
       resetMoveButtons();showPendingMove("");modalMessage.textContent="";modalMessage.style.color="";
       renderInstructionTypeButtons(currentInstructionType||"Move");
       refreshCurrentMoveDisplay(d);
@@ -1981,10 +1981,6 @@ body{height:100dvh;overflow:hidden}
       renderEverything();if(selectedDockId)openDock(selectedDockId);
     });
     function closeModal(){window.EditGuard?.unpin("docks");actionBackdrop.classList.add("hidden");selectedDockId=null;selectedMoveBuilding=null;pendingMove=null;initialStatus=null;initialCustomStatusText="";customStatusText.value="";customStatusWrap.classList.add("hidden")}
-    function togglePanel(which){
-      if(which==="status")statusPanel.classList.toggle("hidden");
-      else movePanel.classList.toggle("hidden")
-    }
     async function updateSelected(payload,success){
       if(!selectedDockId)return null;
       modalMessage.textContent="Saving… / Guardando…";modalMessage.style.color="";
@@ -2663,7 +2659,6 @@ body{height:100dvh;overflow:hidden}
       else if(e.key==="Escape"&&batchSelectedDockIds.size)clearBatchSelection();
     });
     rebuildStatusOptions();
-    statusToggle.addEventListener("click",()=>togglePanel("status"));
     statusSelect.addEventListener("change",()=>{
       renderStatusChoices();
       const isCustom=statusSelect.value==="Custom";
@@ -2674,7 +2669,6 @@ body{height:100dvh;overflow:hidden}
       }
       modalMessage.textContent="";
     });
-    moveToggle.addEventListener("click",()=>togglePanel("move"));
     requestMoveType.addEventListener("click",()=>selectInstructionType("Move"));
     requestAdjustType.addEventListener("click",()=>selectInstructionType("Adjust"));
     requestSealType.addEventListener("click",()=>selectInstructionType("Seal Check"));
