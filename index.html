@@ -265,7 +265,7 @@ html[data-theme="dark"] .yard-nav-primary a[aria-current="page"]{color:#fff}
 <link rel="stylesheet" href="access-control.css?v=20261009-roles">
 <script src="word-fit.js?v=20261026-stable-nav" defer></script>
 <script src="popup-dismiss.js?v=20261016" defer></script>
-<script src="site-language.js?v=20261109-unloading" defer></script><script src="yard-account.js?v=20261026-static-header" defer></script>
+<script src="site-language.js?v=20261118-destruction" defer></script><script src="yard-account.js?v=20261026-static-header" defer></script>
 <style id="yard-header-first-paint">
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
     .topbar-brand{display:flex;align-items:center;gap:16px;min-width:0}
@@ -699,7 +699,7 @@ body{height:100dvh;overflow:hidden}
       "Need An Empty":{cls:"status-needempty",short:"NEED AN EMPTY",color:"var(--needempty)"},
       "Custom":{cls:"status-custom",short:"CUSTOM",color:"var(--custom)"},
       "Closed":{cls:"status-hold",short:"CLOSED",color:"var(--hold)"},
-      "Out of Service":{cls:"status-oos",short:"OOS",color:"var(--oos)"}
+      "Destruction":{cls:"status-oos",short:"DESTRUCTION",color:"var(--oos)"}
     };
     const STATUS_OPTIONS=[
       ["Open Dock","Open / Abierto"],
@@ -712,7 +712,7 @@ body{height:100dvh;overflow:hidden}
       ["3PL","3PL / Logística de terceros"],
       ["Need An Empty","Need An Empty / Necesita un vacío"],
       ["Closed","Closed / Cerrado"],
-      ["Out of Service","Out of Service / Fuera de servicio"],
+      ["Destruction","Destruction / Destrucción"],
       ["Custom","Custom / Personalizado"]
     ];
     function renderStatusChoices(){
@@ -746,7 +746,7 @@ body{height:100dvh;overflow:hidden}
       else if(STATUS_OPTIONS.length)statusSelect.value=STATUS_OPTIONS[0][0];
       renderStatusChoices();
     }
-    const legacyStatus={"Loaded / Ready":"Loaded","Hold":"Closed"};
+    const legacyStatus={"Loaded / Ready":"Loaded","Hold":"Closed","Out of Service":"Destruction"};
     const ACTIVITY_META={
       "On It":{badge:"response-ontheway",flag:"flag-ontheway"},
       "Done":{badge:"response-done",flag:"flag-done"},
@@ -766,7 +766,7 @@ body{height:100dvh;overflow:hidden}
       "Need An Empty":"NEED AN EMPTY / NECESITA UN VACÍO",
       "Custom":"CUSTOM / PERSONALIZADO",
       "Closed":"CLOSED / CERRADO",
-      "Out of Service":"OOS / FUERA DE SERVICIO"
+      "Destruction":"DESTRUCTION / DESTRUCCIÓN"
     };
     const sideBilingual=side=>side==="Parking Lot"?"Parking Lot Side / Lado del estacionamiento":side==="Opposite Side"?"Opposite Side / Lado opuesto":`${side} / ${side}`;
     const userName=emailAddress=>String(emailAddress||"").split("@")[0]||"user";
@@ -1852,7 +1852,7 @@ body{height:100dvh;overflow:hidden}
     }
     function renderSummary(){
       const vals=[...docks.values()],count=s=>vals.filter(d=>normalizedStatus(d.status)===s).length,moves=vals.filter(d=>activeInstructionType(d)&&d.move_instruction_at).length;
-      const cards=[["Open",count("Open Dock"),"var(--open)"],["Empty",count("Empty Trailer"),"var(--empty)"],["Loading",count("Loading"),"var(--loading)"],["Loaded",count("Loaded"),"var(--loaded)"],["Ready",count("Ready"),"var(--ready)"],["Finished",count("Finished Product"),"var(--finished)"],["3PL",count("3PL"),"var(--threepl)"],["Need Empty",count("Need An Empty"),"var(--needempty)"],["Custom",count("Custom"),"var(--custom)"],["Closed",count("Closed"),"var(--hold)"],["OOS",count("Out of Service"),"var(--oos)"],["Requests",moves,"var(--accent)"]];
+      const cards=[["Open",count("Open Dock"),"var(--open)"],["Empty",count("Empty Trailer"),"var(--empty)"],["Loading",count("Loading"),"var(--loading)"],["Loaded",count("Loaded"),"var(--loaded)"],["Ready",count("Ready"),"var(--ready)"],["Finished",count("Finished Product"),"var(--finished)"],["3PL",count("3PL"),"var(--threepl)"],["Need Empty",count("Need An Empty"),"var(--needempty)"],["Custom",count("Custom"),"var(--custom)"],["Closed",count("Closed"),"var(--hold)"],["Destruction",count("Destruction"),"var(--oos)"],["Requests",moves,"var(--accent)"]];
       summaryCards.innerHTML=cards.map(([l,v,c])=>`<div class="summary-card"><div class="label"><i class="summary-dot" style="background:${c}"></i>${l}</div><div class="value">${v}</div></div>`).join("")
     }
     function formatMove(building,dockNo){
@@ -1932,7 +1932,7 @@ body{height:100dvh;overflow:hidden}
     });
     let copiedDockStatus=null;
     function readCopiedDockStatus(){
-      try{const value=JSON.parse(sessionStorage.getItem("ltb-copied-dock-status")||"null");if(value&&STATUS_OPTIONS.some(([status])=>status===value.status)&&(value.status!=="Custom"||String(value.customText||"").trim()))return {status:value.status,customText:value.status==="Custom"?String(value.customText).slice(0,28):""}}catch{}
+      try{const value=JSON.parse(sessionStorage.getItem("ltb-copied-dock-status")||"null");if(value?.status)value.status=normalizedStatus(value.status);if(value&&STATUS_OPTIONS.some(([status])=>status===value.status)&&(value.status!=="Custom"||String(value.customText||"").trim()))return {status:value.status,customText:value.status==="Custom"?String(value.customText).slice(0,28):""}}catch{}
       return copiedDockStatus;
     }
     $("copyDockStatus").addEventListener("click",()=>{
@@ -2672,7 +2672,24 @@ body{height:100dvh;overflow:hidden}
     requestMoveType.addEventListener("click",()=>selectInstructionType("Move"));
     requestAdjustType.addEventListener("click",()=>selectInstructionType("Adjust"));
     requestSealType.addEventListener("click",()=>selectInstructionType("Seal Check"));
-    applyUpdate.addEventListener("click",applyDockUpdate);
+    let dockUpdatePending=false;
+    applyUpdate.addEventListener("click",async()=>{
+      if(dockUpdatePending)return;
+      dockUpdatePending=true;
+      try{await applyDockUpdate()}finally{dockUpdatePending=false}
+    });
+    document.addEventListener("keydown",event=>{
+      if(event.key!=="Enter"||event.defaultPrevented||event.isComposing||event.repeat)return;
+      if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
+      if(!moveCompletionBackdrop.classList.contains("hidden")||document.querySelector("dialog[open]"))return;
+      if(actionBackdrop.classList.contains("hidden"))return;
+      const target=event.target;
+      if(target.closest?.("textarea,[contenteditable],a,select"))return;
+      const button=target.closest?.("button");
+      if(button&&actionBackdrop.contains(button)&&(!button.closest(".modal-body")||button.matches("#releaseTrailer")))return;
+      event.preventDefault();
+      if(!applyUpdate.disabled)applyUpdate.click();
+    });
     pick100.addEventListener("click",()=>{renderInstructionTypeButtons("Move");renderDestinationDocks(100)});
     pick200.addEventListener("click",()=>{renderInstructionTypeButtons("Move");renderDestinationDocks(200)});
     clearMove.addEventListener("click",markClearMove);
