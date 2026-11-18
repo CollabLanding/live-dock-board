@@ -753,6 +753,8 @@ body{height:100dvh;overflow:hidden}
       "Need Clarification":{badge:"response-clarification",flag:"flag-clarification"}
     };
     const safe=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    // The docks status constraint still uses the original storage value.
+    const storedDockStatus=status=>status==="Destruction"?"Out of Service":status;
     const normalizedStatus=s=>legacyStatus[s]||s||"Open Dock";
     const STATUS_BILINGUAL={
       "Open Dock":"OPEN / ABIERTO",
@@ -1344,7 +1346,7 @@ body{height:100dvh;overflow:hidden}
       const full={updated_by:currentUser.id,updated_by_email:currentUser.email};
 
       if(hasStatusChange){
-        full.status=batchStatusValue;
+        full.status=storedDockStatus(batchStatusValue);
         if(batchStatusValue==="Custom"){
           const custom=batchCustomText.value.trim();
           if(!custom){
@@ -2070,7 +2072,7 @@ body{height:100dvh;overflow:hidden}
         if(statusChanged)payload.status=newStatus;
         if(customChanged||statusChanged)payload.custom_status_text=typedCustom;
       }else{
-        if(statusChanged)payload.status=newStatus;
+        if(statusChanged)payload.status=storedDockStatus(newStatus);
         if(currentCustom){
           payload.custom_status_text=null;
           customChanged=true;
